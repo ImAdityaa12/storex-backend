@@ -33,6 +33,10 @@ app.use(
     ],
   })
 );
+app.use("/", async (req, res) => {
+  res.json("Hello World!");
+  return;
+});
 app.use("/users", usersRouter);
 app.use("/admin/products", adminRouter);
 app.use("/products/shop", productsRoute);
