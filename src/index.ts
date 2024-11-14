@@ -33,9 +33,8 @@ app.use(
     ],
   })
 );
-app.use("/", async (req, res) => {
-  res.json("Hello World!");
-  return;
+app.get("/", async (req, res) => {
+  res.json("Express on Vercel");
 });
 app.use("/users", usersRouter);
 app.use("/admin/products", adminRouter);
