@@ -34,7 +34,7 @@ app.use(
   })
 );
 app.get("/", async (req, res) => {
-  res.json("Express on Vercel");
+  res.send("Express on Vercel");
 });
 app.use("/users", usersRouter);
 app.use("/admin/products", adminRouter);
