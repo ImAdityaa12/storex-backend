@@ -72,7 +72,7 @@ export const loginController = async (req: Request, res: Response) => {
       path: "/",
     });
 
-    res.status(200).json({ message: "Logged in successfully" });
+    res.status(200).json({ message: "Logged in successfully", token });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: "An error occurred while logging in" });
