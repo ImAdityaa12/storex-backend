@@ -5,8 +5,7 @@ import { getCurrentUserId } from "../utils/currentUserId";
 
 export const getAllProductsController = async (req: Request, res: Response) => {
   try {
-    const token =
-      "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkaXR5YWd1cHRhMTI5MUBnbWFpbC5jb20iLCJpZCI6IjY3MjdhMzg2MzI2NTdjNWU3NjUxZDhhYiIsImlhdCI6MTczMDY1ODk0M30._yOPYiZvCTOSI7O6NZAMnMyspsfMkEgOERufAnQ8grM";
+    const token = req.headers.authorization as string;
     const user = await userModel.findOne({ _id: getCurrentUserId(token) });
     const category = req.query.category as string;
     const brands = req.query.brands as string;
