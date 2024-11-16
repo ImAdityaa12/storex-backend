@@ -63,6 +63,7 @@ export const loginController = async (req: Request, res: Response) => {
       sameSite: "none", // Required for cross-domain cookies
       maxAge: 24 * 60 * 60 * 1000, // Cookie expiry (e.g., 24 hours)
       // Don't set domain unless you specifically need to
+      path: "/",
     });
 
     res.status(200).json({ message: "Logged in successfully" });
