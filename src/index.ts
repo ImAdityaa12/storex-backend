@@ -21,9 +21,10 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: process.env.PRODUCTION
-      ? "storex-frontend.vercel.app"
-      : "http://localhost:3000",
+    origin:
+      process.env.PRODUCTION === "true"
+        ? "storex-frontend.vercel.app"
+        : "http://localhost:3000",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
