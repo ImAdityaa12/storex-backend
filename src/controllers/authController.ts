@@ -24,14 +24,14 @@ export const registerController = async (req: Request, res: Response) => {
       image,
     });
     const token = generateToken(email, user);
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: true, // Required for HTTPS
-      sameSite: "none", // Required for cross-domain cookies
-      maxAge: 24 * 60 * 60 * 1000,
-      path: "/",
-    });
-    res.status(201).json({ message: "User created successfully" });
+    // res.cookie("token", token, {
+    //   httpOnly: true,
+    //   secure: true, // Required for HTTPS
+    //   sameSite: "none", // Required for cross-domain cookies
+    //   maxAge: 24 * 60 * 60 * 1000,
+    //   path: "/",
+    // });
+    res.status(201).json({ message: "User created successfully", token });
   } catch (error) {
     console.error(error);
     res
