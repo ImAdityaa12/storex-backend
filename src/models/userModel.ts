@@ -30,6 +30,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: "user",
   },
+  approved: {
+    type: Boolean,
+    default: true,
+  },
+  credit: {
+    type: Number,
+    default: 0,
+  },
   savedProduct: {
     type: [mongoose.Schema.Types.ObjectId],
     default: [],

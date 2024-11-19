@@ -93,7 +93,7 @@ export const fetchCartController = async (
       });
 
     if (!cart) {
-      res.status(400).json("Cart not found in database");
+      res.status(201).json({ items: [], userId });
       return;
     }
 

@@ -120,6 +120,8 @@ export const userDetailsController = async (
       phoneNumber: user.phoneNumber,
       userName: user.userName,
       role: user.role,
+      approved: user.approved,
+      credit: user.credit,
       _id: user._id,
     });
   } catch (error) {

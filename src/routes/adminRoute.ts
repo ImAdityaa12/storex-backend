@@ -6,6 +6,7 @@ import {
   getOrderController,
   getProductDetailsController,
   getProductsController,
+  getUsersController,
   handleImageUploadController,
   updateProductController,
 } from "../controllers/admin/productsController";
@@ -20,6 +21,7 @@ router.post(
   upload.single("image"),
   handleImageUploadController
 );
+router.get("/users", getUsersController);
 router.get("/getProducts", getProductsController);
 router.post("/addNewProduct", addNewProductController);
 router.delete("/deleteProduct/:id", deleteProductController);
