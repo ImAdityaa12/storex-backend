@@ -172,6 +172,47 @@ export const updateCartItemQuantityController = async (
     res.status(500).json("An error occurred");
   }
 };
+export const updateCartItemCustomQuantityController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { productId, quantity } = req.body;
+    const token = req.headers.authorization;
+    if (!token) {
+      res.status(401).json("Unauthorized");
+      return;
+    }
+    const userId = getCurrentUserId(token);
+    if (!userId || !productId || !quantity) {
+      res.status(400).json("Missing required fields");
+      return;
+    }
+
+    const cart = await cartModel.findOne({ userId });
+    if (!cart) {
+      res.status(400).json("Cart not found in database");
+      return;
+    }
+
+    const findCurrentProductIndex = cart.items.findIndex(
+      (item) => item.productId.toString() === productId
+    );
+    if (findCurrentProductIndex === -1) {
+      res.status(400).json("Product not found in cart");
+      return;
+    } else {
+      if (typeof quantity === "number") {
+        cart.items[findCurrentProductIndex].quantity = quantity;
+        await cart.save();
+      }
+      res.status(200).json(cart);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json("An error occurred");
+  }
+};
 
 export const deleteCartItemController = async (req: Request, res: Response) => {
   try {
