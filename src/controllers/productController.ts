@@ -112,3 +112,40 @@ export const searchProductsController = async (req: Request, res: Response) => {
       .json({ message: "An error occurred while searching products" });
   }
 };
+
+export const getCategoryDataController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const token = req.headers.authorization as string;
+    const user = await userModel.findOne({ _id: getCurrentUserId(token) });
+    const category = req.params.category as string;
+    const cleanCategory = category?.replace(/"/g, "");
+    const filteredProduct = await productModel
+      .find({
+        category: { $regex: cleanCategory, $options: "i" },
+      })
+      .sort({ price: 1 });
+    const products: {
+      product: any;
+      isLiked: boolean;
+    }[] = filteredProduct.map((product) =>
+      user?.savedProduct.includes(product._id)
+        ? {
+            product,
+            isLiked: true,
+          }
+        : {
+            product,
+            isLiked: false,
+          }
+    );
+    res.status(200).json({ products });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while searching products" });
+  }
+};
