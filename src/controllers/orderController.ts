@@ -163,3 +163,26 @@ export const addOrderController = async (req: Request, res: Response) => {
     return;
   }
 };
+
+export const getUserOrder = async (req: Request, res: Response) => {
+  try {
+    const token = req.headers.authorization as string;
+    const userId = getCurrentUserId(token);
+    const allUserOrders = await orderModel.find({ userId });
+    const orders = allUserOrders.map((order) => ({
+      _id: order._id,
+      items: order.cartItems,
+      total: order.totalAmount,
+      status: order.orderStatus,
+      date: order.orderDate,
+      address: order.address,
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus,
+    }));
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json("An error occurred");
+    return;
+  }
+};

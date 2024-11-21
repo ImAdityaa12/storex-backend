@@ -3,11 +3,13 @@ import {
   addOrderController,
   capturePayment,
   createOrder,
+  getUserOrder,
   updateOrderStatus,
 } from "../controllers/orderController";
 const router = express.Router();
 router.post("/addOrder", addOrderController);
 router.post("/create", createOrder);
 router.post("/capture", capturePayment);
+router.get("/getUserOrder", getUserOrder);
 // router.post("update/OrderStatus", updateOrderStatus);
 export default router;
