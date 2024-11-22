@@ -170,7 +170,6 @@ export const getUsersController = async (req: Request, res: Response) => {
       res.status(401).json({ message: "Unauthorized" });
       return;
     }
-    console.log(userId);
     const users = await userModel.find();
     const allUsers = users.filter((user) => user.id !== userId);
     res.json({ users: allUsers });
