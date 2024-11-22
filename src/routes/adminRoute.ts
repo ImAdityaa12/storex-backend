@@ -11,7 +11,8 @@ import {
   updateProductController,
 } from "../controllers/admin/productsController";
 import { upload } from "../utils/cloudinary";
-import { updateOrderStatus } from "../controllers/orderController";
+import { updateUserRoleController } from "../controllers/admin/userController";
+// import { updateOrderStatus } from "../controllers/orderController";
 const router = express.Router();
 router.get("/", async (req, res) => {
   res.json("admin route");
@@ -29,5 +30,6 @@ router.put("/updateProduct/:id", updateProductController);
 router.get("/filter", getFilteredProductsController);
 router.get("/detail", getProductDetailsController);
 router.get("/orders", getOrderController);
-router.post("order/update", updateOrderStatus);
+router.put("/updateRole/:id", updateUserRoleController);
+// router.post("order/update", updateOrderStatus);
 export default router;

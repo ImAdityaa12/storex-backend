@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { imageUploadUtil } from "../../utils/cloudinary";
 import productModel from "../../models/productModel";
-import { getCurrentUserId } from "../../utils/currentUserId";
 import orderModel from "../../models/orderModel";
 import userModel from "../../models/userModel";
+import { getCurrentUserId } from "../../utils/currentUserId";
 
 export const getProductsController = async (req: Request, res: Response) => {
   try {
@@ -163,8 +163,17 @@ export const getOrderController = async (req: Request, res: Response) => {
 
 export const getUsersController = async (req: Request, res: Response) => {
   try {
+    const token = req.headers.authorization as string;
+    const userId = getCurrentUserId(token);
+    const user = await userModel.findById(userId);
+    if (user?.role !== "admin") {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+    console.log(userId);
     const users = await userModel.find();
-    res.json({ users });
+    const allUsers = users.filter((user) => user.id !== userId);
+    res.json({ users: allUsers });
   } catch (error) {
     res
       .status(500)
