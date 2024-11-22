@@ -3,6 +3,7 @@ import paypal from "../utils/paypal";
 import orderModel from "../models/orderModel";
 import cartModel from "../models/cartModel";
 import { getCurrentUserId } from "../utils/currentUserId";
+import userModel from "../models/userModel";
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
@@ -111,15 +112,23 @@ export const capturePayment = async (req: Request, res: Response) => {
 export const updateOrderStatus = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { orderStatus } = req.body;
+    const token = req.headers.authorization as string;
+    const userId = getCurrentUserId(token);
+    const user = await userModel.findById(userId);
+    if (user?.role !== "admin") {
+      res.status(404).json("Unauthorized");
+      return;
+    }
+    const { orderStatus, paymentStatus } = req.body;
     const order = await orderModel.findById(id);
     if (!order) {
       res.status(404).json("Order not found");
       return;
     }
     order.orderStatus = orderStatus;
+    order.paymentStatus = paymentStatus;
     await order.save();
-    res.status(200).json("Order status updated successfully");
+    res.status(200).json({ message: "Order status updated successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json("An error occurred");
