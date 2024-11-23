@@ -149,3 +149,49 @@ export const getCategoryDataController = async (
       .json({ message: "An error occurred while searching products" });
   }
 };
+
+export const getSimilarProductsController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const token = req.headers.authorization as string;
+    const user = await userModel.findOne({ _id: getCurrentUserId(token) });
+    if (!user) {
+      res.status(400).json("User not found in database");
+      return;
+    }
+    const productId = req.params.id as string;
+    const product = await productModel.findById(productId);
+    const category = product?.category;
+    const cleanCategory = category?.replace(/"/g, "").split(",") || [];
+    const filteredProduct = await productModel
+      .find({
+        category: { $regex: cleanCategory.join("|"), $options: "i" },
+      })
+      .sort({ price: 1 });
+    let products: {
+      product: any;
+      isLiked: boolean;
+    }[] = filteredProduct.map((product) =>
+      user?.savedProduct.includes(product._id)
+        ? {
+            product,
+            isLiked: true,
+          }
+        : {
+            product,
+            isLiked: false,
+          }
+    );
+    products = products.filter(
+      (product) => product.product._id.toString() !== productId
+    );
+    res.status(200).json({ products });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while searching products" });
+  }
+};
