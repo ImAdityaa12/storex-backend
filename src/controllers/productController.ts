@@ -201,3 +201,40 @@ export const getSimilarProductsController = async (
       .json({ message: "An error occurred while searching products" });
   }
 };
+export const getLatestProductsController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const token = req.headers.authorization as string;
+    const user = await userModel.findOne({ _id: getCurrentUserId(token) });
+    if (!user) {
+      res.status(400).json("User not found in database");
+      return;
+    }
+    const filteredProduct = await productModel
+      .find()
+      .sort({ createdAt: -1 })
+      .limit(10);
+    let products: {
+      product: any;
+      isLiked: boolean;
+    }[] = filteredProduct.map((product) =>
+      user?.savedProduct.includes(product._id)
+        ? {
+            product,
+            isLiked: true,
+          }
+        : {
+            product,
+            isLiked: false,
+          }
+    );
+    res.status(200).json({ products });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while searching products" });
+  }
+};

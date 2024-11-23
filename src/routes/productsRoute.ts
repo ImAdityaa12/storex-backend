@@ -2,6 +2,7 @@ import express from "express";
 import {
   getAllProductsController,
   getCategoryDataController,
+  getLatestProductsController,
   getProductDetailsController,
   getSimilarProductsController,
   saveProductController,
@@ -14,4 +15,5 @@ router.get("/save/:id", saveProductController);
 router.get("/search", searchProductsController);
 router.get("/:category", getCategoryDataController);
 router.get("/getSimilarProducts/:id", getSimilarProductsController);
+router.get("/latestProducts/get", getLatestProductsController);
 export default router;
