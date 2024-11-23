@@ -187,7 +187,13 @@ export const getSimilarProductsController = async (
     products = products.filter(
       (product) => product.product._id.toString() !== productId
     );
-    res.status(200).json({ products });
+    if (products.length < 10) {
+      res.status(200).json({ products: products.slice(0, 10) });
+      return;
+    } else {
+      res.status(200).json({ products });
+      return;
+    }
   } catch (error) {
     console.error(error);
     res
