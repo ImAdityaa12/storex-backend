@@ -11,7 +11,11 @@ import {
   updateProductController,
 } from "../controllers/admin/productsController";
 import { upload } from "../utils/cloudinary";
-import { updateUserRoleController } from "../controllers/admin/userController";
+import {
+  updateUserApprovalController,
+  updateUserCreditController,
+  updateUserRoleController,
+} from "../controllers/admin/userController";
 // import { updateOrderStatus } from "../controllers/orderController";
 const router = express.Router();
 router.get("/", async (req, res) => {
@@ -31,5 +35,7 @@ router.get("/filter", getFilteredProductsController);
 router.get("/detail", getProductDetailsController);
 router.get("/orders", getOrderController);
 router.put("/updateRole/:id", updateUserRoleController);
+router.put("/updateCredit/:id", updateUserCreditController);
+router.put("/updateApproval/:id", updateUserApprovalController);
 // router.post("order/update", updateOrderStatus);
 export default router;
