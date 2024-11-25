@@ -187,7 +187,11 @@ export const getUsersController = async (req: Request, res: Response) => {
 
 export const addModelController = async (req: Request, res: Response) => {
   try {
-    const { models } = req.body;
+    const { model, image } = req.body;
+    if (!model || !image) {
+      res.status(400).json({ message: "Model and image are required" });
+      return;
+    }
     const token = req.headers.authorization as string;
     const userId = getCurrentUserId(token);
     const user = await userModel.findById(userId);
@@ -195,55 +199,18 @@ export const addModelController = async (req: Request, res: Response) => {
       res.status(401).json({ message: "Unauthorized" });
       return;
     }
-
-    if (!Array.isArray(models)) {
-      res.status(400).json({ message: "Models must be provided as an array" });
+    const existingModel = await modelNumber.findOne({ model });
+    if (existingModel) {
+      res.status(409).json({ message: "Model already exists" });
       return;
     }
+    const createdModel = await modelNumber.create({ model, image });
 
-    const results = {
-      success: [] as string[],
-      duplicates: [] as string[],
-      errors: [] as string[],
-    };
-
-    for (const model of models) {
-      try {
-        const existingModel = await modelNumber.findOne({ model });
-
-        if (existingModel) {
-          results.duplicates.push(model);
-          continue;
-        }
-
-        const createdModel = await modelNumber.create({ model });
-
-        if (createdModel) {
-          results.success.push(model);
-        }
-      } catch (error) {
-        results.errors.push(model);
-        console.error(`Error processing model ${model}:`, error);
-      }
+    if (!createdModel) {
+      res.status(500).json({ message: "Failed to create model" });
+      return;
     }
-
-    // Prepare response message
-    const response = {
-      message: "Models processing completed",
-      details: {
-        successfullyAdded: results.success,
-        alreadyExisting: results.duplicates,
-        failedToAdd: results.errors,
-      },
-      summary: {
-        total: models.length,
-        successful: results.success.length,
-        duplicates: results.duplicates.length,
-        errors: results.errors.length,
-      },
-    };
-
-    res.json(response);
+    res.json({ message: `${model} created successfully` });
     return;
   } catch (error) {
     console.error("Controller error:", error);

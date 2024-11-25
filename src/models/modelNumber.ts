@@ -6,6 +6,9 @@ const modelNumber = new mongoose.Schema(
       type: String,
       unique: true,
     },
+    image: {
+      type: String,
+    },
     category: [
       {
         type: mongoose.Schema.Types.ObjectId,
