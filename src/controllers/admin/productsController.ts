@@ -190,7 +190,6 @@ export const addModelController = async (req: Request, res: Response) => {
     const { models } = req.body;
     const token = req.headers.authorization as string;
     const userId = getCurrentUserId(token);
-
     const user = await userModel.findById(userId);
     if (user?.role !== "admin") {
       res.status(401).json({ message: "Unauthorized" });
@@ -345,7 +344,6 @@ export const addBrandContoller = async (req: Request, res: Response) => {
     };
 
     for (const brand of brands) {
-      console.log(brand);
       try {
         const existingBrand = await brandModel.findOne({ brand });
         if (existingBrand) {
@@ -415,7 +413,6 @@ export const getproductTagsController = async (req: Request, res: Response) => {
 export const deleteTagController = async (req: Request, res: Response) => {
   const { title } = req.params;
   const { tag } = req.query;
-  console.log(tag);
   try {
     const token = req.headers.authorization as string;
     const userId = getCurrentUserId(token);
@@ -424,7 +421,7 @@ export const deleteTagController = async (req: Request, res: Response) => {
       res.status(401).json({ message: "Unauthorized" });
       return;
     }
-    if (tag === "brand") {
+    if (tag === "brands") {
       const brand = await brandModel.findOne({ brand: title });
       if (!brand) {
         res.status(404).json({ message: `${title} not found` });
@@ -435,7 +432,7 @@ export const deleteTagController = async (req: Request, res: Response) => {
       return;
     }
 
-    if (tag === "category") {
+    if (tag === "categories") {
       const category = await categoryModel.findOne({ category: title });
       if (!category) {
         res.status(404).json({ message: `${title} not found` });
@@ -446,7 +443,7 @@ export const deleteTagController = async (req: Request, res: Response) => {
       return;
     }
 
-    if (tag === "model") {
+    if (tag === "models") {
       const model = await modelNumber.findOne({ model: title });
       if (!model) {
         res.status(404).json({ message: "Model not found" });
