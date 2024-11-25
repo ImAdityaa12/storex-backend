@@ -2,7 +2,10 @@ import mongoose from "mongoose";
 
 const brandModel = new mongoose.Schema(
   {
-    brand: String,
+    brand: {
+      type: String,
+      unique: true,
+    },
     modelId: [
       {
         type: mongoose.Schema.Types.ObjectId,

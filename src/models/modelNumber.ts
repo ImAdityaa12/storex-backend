@@ -2,7 +2,10 @@ import mongoose from "mongoose";
 
 const modelNumber = new mongoose.Schema(
   {
-    model: String,
+    model: {
+      type: String,
+      unique: true,
+    },
     category: [
       {
         type: mongoose.Schema.Types.ObjectId,

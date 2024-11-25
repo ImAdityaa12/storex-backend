@@ -298,7 +298,6 @@ export const addCategoryController = async (req: Request, res: Response) => {
       }
     }
 
-    // Prepare response message
     const response = {
       message: "Categories processing completed",
       details: {

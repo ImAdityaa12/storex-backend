@@ -2,7 +2,10 @@ import mongoose from "mongoose";
 
 const categoryModel = new mongoose.Schema(
   {
-    category: String,
+    category: {
+      type: String,
+      unique: true,
+    },
     modelId: [
       {
         type: mongoose.Schema.Types.ObjectId,
