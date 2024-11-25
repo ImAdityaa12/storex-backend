@@ -7,6 +7,8 @@ import { getCurrentUserId } from "../../utils/currentUserId";
 import modelNumber from "../../models/modelNumber";
 import categoryModel from "../../models/categoryModel";
 import brandModel from "../../models/brandModel";
+import { model, models } from "mongoose";
+import console from "console";
 
 export const getProductsController = async (req: Request, res: Response) => {
   try {
@@ -256,33 +258,74 @@ export const addCategoryController = async (req: Request, res: Response) => {
     const { categories } = req.body;
     const token = req.headers.authorization as string;
     const userId = getCurrentUserId(token);
+
     const user = await userModel.findById(userId);
     if (user?.role !== "admin") {
       res.status(401).json({ message: "Unauthorized" });
       return;
     }
-    const existingCategory = await categoryModel.findOne({
-      category: category,
-    });
-    if (existingCategory) {
-      res.status(400).json({ message: "Category already exists" });
+
+    if (!Array.isArray(categories)) {
+      res
+        .status(400)
+        .json({ message: "Categories must be provided as an array" });
       return;
     }
-    const createdCategory = await categoryModel.create({
-      category,
-    });
-    if (createdCategory) {
-      res.json({ message: `${createdCategory.category} has been added` });
+
+    const results = {
+      success: [] as string[],
+      duplicates: [] as string[],
+      errors: [] as string[],
+    };
+
+    for (const category of categories) {
+      try {
+        const existingModel = await categoryModel.findOne({ category });
+
+        if (existingModel) {
+          results.duplicates.push(category);
+          continue;
+        }
+
+        const createdCategory = await categoryModel.create({ category });
+
+        if (createdCategory) {
+          results.success.push(category);
+        }
+      } catch (error) {
+        results.errors.push(category);
+        console.error(`Error processing Category ${category}:`, error);
+      }
     }
+
+    // Prepare response message
+    const response = {
+      message: "Categories processing completed",
+      details: {
+        successfullyAdded: results.success,
+        alreadyExisting: results.duplicates,
+        failedToAdd: results.errors,
+      },
+      summary: {
+        total: models.length,
+        successful: results.success.length,
+        duplicates: results.duplicates.length,
+        errors: results.errors.length,
+      },
+    };
+
+    res.json(response);
+    return;
   } catch (error) {
-    console.log(error);
-    res.status(500).json("An error occurred");
+    console.error("Controller error:", error);
+    res.status(500).json({ message: "An error occurred" });
+    return;
   }
 };
 
 export const addBrandContoller = async (req: Request, res: Response) => {
   try {
-    const { brand } = req.body;
+    const { brands } = req.body;
     const token = req.headers.authorization as string;
     const userId = getCurrentUserId(token);
     const user = await userModel.findById(userId);
@@ -290,20 +333,58 @@ export const addBrandContoller = async (req: Request, res: Response) => {
       res.status(401).json({ message: "Unauthorized" });
       return;
     }
-    const existingBrand = await brandModel.findOne({ brand: brand });
-    if (existingBrand) {
-      res.status(400).json({ message: "Brand already exists" });
+
+    if (!Array.isArray(brands)) {
+      res.status(400).json({ message: "brands must be provided as an array" });
       return;
     }
-    const createdBrand = await brandModel.create({
-      brand,
-    });
-    if (createdBrand) {
-      res.json({ message: `${createdBrand.brand} has been added` });
+
+    const results = {
+      success: [] as string[],
+      duplicates: [] as string[],
+      errors: [] as string[],
+    };
+
+    for (const brand of brands) {
+      console.log(brand);
+      try {
+        const existingBrand = await brandModel.findOne({ brand });
+        if (existingBrand) {
+          results.duplicates.push(brand);
+          continue;
+        }
+
+        const createdbrand = await brandModel.create({ brand });
+
+        if (createdbrand) {
+          results.success.push(brand);
+        }
+      } catch (error) {
+        results.errors.push(brand);
+        console.error(`Error processing Category ${brand}:`, error);
+      }
     }
+    const response = {
+      message: "Categories processing completed",
+      details: {
+        successfullyAdded: results.success,
+        alreadyExisting: results.duplicates,
+        failedToAdd: results.errors,
+      },
+      summary: {
+        total: models.length,
+        successful: results.success.length,
+        duplicates: results.duplicates.length,
+        errors: results.errors.length,
+      },
+    };
+
+    res.json(response);
+    return;
   } catch (error) {
-    console.log(error);
-    res.status(500).json("An error occurred");
+    console.error("Controller error:", error);
+    res.status(500).json({ message: "An error occurred" });
+    return;
   }
 };
 
