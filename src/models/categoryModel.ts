@@ -6,6 +6,9 @@ const categoryModel = new mongoose.Schema(
       type: String,
       unique: true,
     },
+    image: {
+      type: String,
+    },
     modelId: [
       {
         type: mongoose.Schema.Types.ObjectId,

@@ -254,7 +254,7 @@ export const addModelController = async (req: Request, res: Response) => {
 
 export const addCategoryController = async (req: Request, res: Response) => {
   try {
-    const { categories } = req.body;
+    const { category, image } = req.body;
     const token = req.headers.authorization as string;
     const userId = getCurrentUserId(token);
 
@@ -263,56 +263,19 @@ export const addCategoryController = async (req: Request, res: Response) => {
       res.status(401).json({ message: "Unauthorized" });
       return;
     }
+    const existingModel = await categoryModel.findOne({ category });
+    if (existingModel) {
+      res.status(409).json({ message: "Category already exists" });
+      return;
+    }
+    const createdCategory = await categoryModel.create({ category, image });
 
-    if (!Array.isArray(categories)) {
-      res
-        .status(400)
-        .json({ message: "Categories must be provided as an array" });
+    if (!createdCategory) {
+      res.status(500).json({ message: "Failed to create category" });
       return;
     }
 
-    const results = {
-      success: [] as string[],
-      duplicates: [] as string[],
-      errors: [] as string[],
-    };
-
-    for (const category of categories) {
-      try {
-        const existingModel = await categoryModel.findOne({ category });
-
-        if (existingModel) {
-          results.duplicates.push(category);
-          continue;
-        }
-
-        const createdCategory = await categoryModel.create({ category });
-
-        if (createdCategory) {
-          results.success.push(category);
-        }
-      } catch (error) {
-        results.errors.push(category);
-        console.error(`Error processing Category ${category}:`, error);
-      }
-    }
-
-    const response = {
-      message: "Categories processing completed",
-      details: {
-        successfullyAdded: results.success,
-        alreadyExisting: results.duplicates,
-        failedToAdd: results.errors,
-      },
-      summary: {
-        total: models.length,
-        successful: results.success.length,
-        duplicates: results.duplicates.length,
-        errors: results.errors.length,
-      },
-    };
-
-    res.json(response);
+    res.status(201).json({ message: `${category} created successfully` });
     return;
   } catch (error) {
     console.error("Controller error:", error);
