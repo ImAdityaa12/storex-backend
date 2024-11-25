@@ -36,6 +36,25 @@ export const updateUserCreditController = async (
     }
     const { id } = req.params;
     const { credit } = req.body;
+    const { action } = req.query;
+    if (action === "add") {
+      await userModel.findByIdAndUpdate(
+        id,
+        { $inc: { credit } },
+        { new: true }
+      );
+      res.json({ message: "User credit updated successfully" });
+      return;
+    }
+    if (action === "minus") {
+      await userModel.findByIdAndUpdate(
+        id,
+        { $inc: { credit: -credit } },
+        { new: true }
+      );
+      res.json({ message: "User credit updated successfully" });
+      return;
+    }
     await userModel.findByIdAndUpdate(id, { credit }, { new: true });
     res.json({ message: "User credit updated successfully" });
     return;
