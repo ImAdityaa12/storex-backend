@@ -5,6 +5,7 @@ import {
   addModelController,
   addNewProductController,
   deleteProductController,
+  deleteTagController,
   getFilteredProductsController,
   getOrderController,
   getProductDetailsController,
@@ -45,6 +46,6 @@ router.post("/addModel", addModelController);
 router.post("/addCategory", addCategoryController);
 router.post("/addBrand", addBrandContoller);
 router.get("/productTags", getproductTagsController);
-
+router.delete("/deleteTag/:title", deleteTagController);
 // router.post("order/update", updateOrderStatus);
 export default router;

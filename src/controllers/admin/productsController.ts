@@ -411,3 +411,52 @@ export const getproductTagsController = async (req: Request, res: Response) => {
       .json({ message: "An error occurred while fetching products" });
   }
 };
+
+export const deleteTagController = async (req: Request, res: Response) => {
+  const { title } = req.params;
+  const { tag } = req.query;
+  console.log(tag);
+  try {
+    const token = req.headers.authorization as string;
+    const userId = getCurrentUserId(token);
+    const user = await userModel.findById(userId);
+    if (user?.role !== "admin") {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+    if (tag === "brand") {
+      const brand = await brandModel.findOne({ brand: title });
+      if (!brand) {
+        res.status(404).json({ message: `${title} not found` });
+        return;
+      }
+      await brandModel.deleteOne({ brand: title });
+      res.json({ message: `${title} deleted successfully` });
+      return;
+    }
+
+    if (tag === "category") {
+      const category = await categoryModel.findOne({ category: title });
+      if (!category) {
+        res.status(404).json({ message: `${title} not found` });
+        return;
+      }
+      await categoryModel.deleteOne({ category: title });
+      res.json({ message: `${title} deleted successfully` });
+      return;
+    }
+
+    if (tag === "model") {
+      const model = await modelNumber.findOne({ model: title });
+      if (!model) {
+        res.status(404).json({ message: "Model not found" });
+        return;
+      }
+      await modelNumber.deleteOne({ model: title });
+      res.json({ message: `${title} deleted successfully` });
+      return;
+    }
+  } catch (error) {
+    res.status(500).json({ message: "An error occurred" });
+  }
+};
