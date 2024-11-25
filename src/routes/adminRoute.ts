@@ -1,11 +1,15 @@
 import express from "express";
 import {
+  addBrandContoller,
+  addCategoryController,
+  addModelController,
   addNewProductController,
   deleteProductController,
   getFilteredProductsController,
   getOrderController,
   getProductDetailsController,
   getProductsController,
+  getproductTagsController,
   getUsersController,
   handleImageUploadController,
   updateProductController,
@@ -37,5 +41,10 @@ router.get("/orders", getOrderController);
 router.put("/updateRole/:id", updateUserRoleController);
 router.put("/updateCredit/:id", updateUserCreditController);
 router.put("/updateApproval/:id", updateUserApprovalController);
+router.post("/addModel", addModelController);
+router.post("/addCategory", addCategoryController);
+router.post("/addBrand", addBrandContoller);
+router.get("/productTags", getproductTagsController);
+
 // router.post("order/update", updateOrderStatus);
 export default router;
