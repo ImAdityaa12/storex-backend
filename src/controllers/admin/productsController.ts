@@ -4,6 +4,9 @@ import productModel from "../../models/productModel";
 import orderModel from "../../models/orderModel";
 import userModel from "../../models/userModel";
 import { getCurrentUserId } from "../../utils/currentUserId";
+import modelNumber from "../../models/modelNumber";
+import categoryModel from "../../models/categoryModel";
+import brandModel from "../../models/brandModel";
 
 export const getProductsController = async (req: Request, res: Response) => {
   try {
@@ -173,6 +176,155 @@ export const getUsersController = async (req: Request, res: Response) => {
     const users = await userModel.find();
     const allUsers = users.filter((user) => user.id !== userId);
     res.json({ users: allUsers });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "An error occurred while fetching products" });
+  }
+};
+
+export const addModelController = async (req: Request, res: Response) => {
+  try {
+    const { models } = req.body;
+    const token = req.headers.authorization as string;
+    const userId = getCurrentUserId(token);
+
+    const user = await userModel.findById(userId);
+    if (user?.role !== "admin") {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+
+    if (!Array.isArray(models)) {
+      res.status(400).json({ message: "Models must be provided as an array" });
+      return;
+    }
+
+    const results = {
+      success: [] as string[],
+      duplicates: [] as string[],
+      errors: [] as string[],
+    };
+
+    for (const model of models) {
+      try {
+        const existingModel = await modelNumber.findOne({ model });
+
+        if (existingModel) {
+          results.duplicates.push(model);
+          continue;
+        }
+
+        const createdModel = await modelNumber.create({ model });
+
+        if (createdModel) {
+          results.success.push(model);
+        }
+      } catch (error) {
+        results.errors.push(model);
+        console.error(`Error processing model ${model}:`, error);
+      }
+    }
+
+    // Prepare response message
+    const response = {
+      message: "Models processing completed",
+      details: {
+        successfullyAdded: results.success,
+        alreadyExisting: results.duplicates,
+        failedToAdd: results.errors,
+      },
+      summary: {
+        total: models.length,
+        successful: results.success.length,
+        duplicates: results.duplicates.length,
+        errors: results.errors.length,
+      },
+    };
+
+    res.json(response);
+    return;
+  } catch (error) {
+    console.error("Controller error:", error);
+    res.status(500).json({ message: "An error occurred" });
+    return;
+  }
+};
+
+export const addCategoryController = async (req: Request, res: Response) => {
+  try {
+    const { categories } = req.body;
+    const token = req.headers.authorization as string;
+    const userId = getCurrentUserId(token);
+    const user = await userModel.findById(userId);
+    if (user?.role !== "admin") {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+    const existingCategory = await categoryModel.findOne({
+      category: category,
+    });
+    if (existingCategory) {
+      res.status(400).json({ message: "Category already exists" });
+      return;
+    }
+    const createdCategory = await categoryModel.create({
+      category,
+    });
+    if (createdCategory) {
+      res.json({ message: `${createdCategory.category} has been added` });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("An error occurred");
+  }
+};
+
+export const addBrandContoller = async (req: Request, res: Response) => {
+  try {
+    const { brand } = req.body;
+    const token = req.headers.authorization as string;
+    const userId = getCurrentUserId(token);
+    const user = await userModel.findById(userId);
+    if (user?.role !== "admin") {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+    const existingBrand = await brandModel.findOne({ brand: brand });
+    if (existingBrand) {
+      res.status(400).json({ message: "Brand already exists" });
+      return;
+    }
+    const createdBrand = await brandModel.create({
+      brand,
+    });
+    if (createdBrand) {
+      res.json({ message: `${createdBrand.brand} has been added` });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("An error occurred");
+  }
+};
+
+export const getproductTagsController = async (req: Request, res: Response) => {
+  try {
+    const token = req.headers.authorization as string;
+    const userId = getCurrentUserId(token);
+    const user = await userModel.findById(userId);
+    if (user?.role !== "admin") {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+    const brands = await brandModel.find();
+    const categories = await categoryModel.find();
+    const models = await modelNumber.find();
+    res.json({
+      brands: brands.map((brand) => brand.brand),
+      categories: categories.map((category) => category.category),
+      models: models.map((model) => model.model),
+    });
+    return;
   } catch (error) {
     res
       .status(500)
