@@ -51,6 +51,7 @@ export const addNewProductController = async (req: Request, res: Response) => {
       price,
       brand,
       category,
+      model,
       salePrice,
       totalStock,
     } = req.body;
@@ -61,6 +62,7 @@ export const addNewProductController = async (req: Request, res: Response) => {
       price,
       brand,
       category,
+      model,
       salePrice,
       totalStock,
     });

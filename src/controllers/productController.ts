@@ -102,6 +102,7 @@ export const searchProductsController = async (req: Request, res: Response) => {
         { brand: { $regex: new RegExp(query, "i") } },
         { category: { $regex: new RegExp(query, "i") } },
         { description: { $regex: new RegExp(query, "i") } },
+        { model: { $regex: new RegExp(query, "i") } },
       ],
     });
     res.json(filteredProducts);
