@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import productModel from "../models/productModel";
 import userModel from "../models/userModel";
 import { getCurrentUserId } from "../utils/currentUserId";
+import categoryModel from "../models/categoryModel";
 
 export const getAllProductsController = async (req: Request, res: Response) => {
   try {
@@ -113,6 +114,29 @@ export const searchProductsController = async (req: Request, res: Response) => {
   }
 };
 
+export const getCategoriesController = async (req: Request, res: Response) => {
+  try {
+    const token = req.headers.authorization as string;
+    const user = await userModel.findOne({ _id: getCurrentUserId(token) });
+    if (!user) {
+      res.status(400).json("User not found in database");
+      return;
+    }
+    const categories = await categoryModel.find();
+    const category = categories.map((item) => {
+      return {
+        name: item.category,
+        image: item.image,
+      };
+    });
+    res.status(200).json({ category });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while searching products" });
+  }
+};
 export const getCategoryDataController = async (
   req: Request,
   res: Response
