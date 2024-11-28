@@ -6,6 +6,7 @@ import categoryModel from "../models/categoryModel";
 
 export const getAllProductsController = async (req: Request, res: Response) => {
   try {
+    const page = parseInt(req.query.page as string) || 1;
     const token = req.headers.authorization as string;
     const user = await userModel.findOne({ _id: getCurrentUserId(token) });
     const category = req.query.category as string;
@@ -25,7 +26,11 @@ export const getAllProductsController = async (req: Request, res: Response) => {
               isLiked: false,
             }
       );
-      res.status(200).json(userLikedProducts);
+      const pagewiseProducts = userLikedProducts.slice(
+        (page - 1) * 10,
+        page * 10
+      );
+      res.json({ products: pagewiseProducts });
       return;
     } else if (cleanCategory && !cleanBrands) {
       const filteredProduct = await productModel
@@ -143,6 +148,7 @@ export const getCategoryDataController = async (
   res: Response
 ) => {
   try {
+    const page = parseInt(req.query.page as string) || 1;
     const token = req.headers.authorization as string;
     const user = await userModel.findOne({ _id: getCurrentUserId(token) });
     const category = req.params.category as string;
@@ -166,7 +172,9 @@ export const getCategoryDataController = async (
             isLiked: false,
           }
     );
-    res.status(200).json({ products });
+    console.log(products.length);
+    const pagewiseProducts = products.slice((page - 1) * 10, page * 10);
+    res.status(200).json({ products: pagewiseProducts });
   } catch (error) {
     console.error(error);
     res
