@@ -20,10 +20,18 @@ export const getAllProductsController = async (req: Request, res: Response) => {
           ? {
               product,
               isLiked: true,
+              discount:
+                product.price &&
+                product.salePrice &&
+                ((product.price - product.salePrice) * 100) / product.price,
             }
           : {
               product,
               isLiked: false,
+              discount:
+                product.price &&
+                product.salePrice &&
+                ((product.price - product.salePrice) * 100) / product.price,
             }
       );
       const pagewiseProducts = userLikedProducts.slice(
