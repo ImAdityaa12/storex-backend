@@ -3,8 +3,7 @@ import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import { generateToken } from "../utils/generateToken";
 import jwt from "jsonwebtoken";
-import cartModel from "../models/cartModel";
-import { getCurrentUserId } from "../utils/currentUserId";
+import { calculateDiscount } from "../utils/calculateDiscount";
 export const registerController = async (req: Request, res: Response) => {
   try {
     const { name, userName, email, password, phoneNumber, image } = req.body;
@@ -156,9 +155,15 @@ export const userSavedItemsController = async (
       res.status(404).json({ message: "User not found" });
       return;
     }
-
+    const products = user.savedProduct.map((product: any) => {
+      return {
+        product,
+        isLiked: true,
+        discount: calculateDiscount(product.price ?? 0, product.salePrice ?? 0),
+      };
+    });
     // Send the populated saved products as response
-    res.status(200).json(user.savedProduct);
+    res.status(200).json(products);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "An error occurred" });

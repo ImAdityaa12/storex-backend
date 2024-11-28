@@ -3,6 +3,7 @@ import productModel from "../models/productModel";
 import userModel from "../models/userModel";
 import { getCurrentUserId } from "../utils/currentUserId";
 import categoryModel from "../models/categoryModel";
+import { calculateDiscount } from "../utils/calculateDiscount";
 
 export const getAllProductsController = async (req: Request, res: Response) => {
   try {
@@ -68,12 +69,23 @@ export const getProductDetailsController = async (
   res: Response
 ) => {
   try {
+    const token = req.headers.authorization as string;
+    const user = await userModel.findOne({ _id: getCurrentUserId(token) });
     const productId = req.params.id;
     const product = await productModel.findById(productId);
-    res.status(200).json({ product });
+    if (!product) {
+      res.status(404).json("Product not found");
+      return;
+    }
+    const isLiked = user?.savedProduct.includes(product._id);
+    res.status(200).json({
+      product,
+      discount: calculateDiscount(product.price ?? 0, product.salePrice ?? 0),
+      isLiked,
+    });
   } catch (error) {
     console.log(error);
-    res.status(500).json("Some error occured");
+    res.status(500).json("Some error occurred");
   }
 };
 export const saveProductController = async (req: Request, res: Response) => {
@@ -174,10 +186,18 @@ export const getCategoryDataController = async (
         ? {
             product,
             isLiked: true,
+            discount: calculateDiscount(
+              product.price ?? 0,
+              product.salePrice ?? 0
+            ),
           }
         : {
             product,
             isLiked: false,
+            discount: calculateDiscount(
+              product.price ?? 0,
+              product.salePrice ?? 0
+            ),
           }
     );
     const pagewiseProducts = products.slice((page - 1) * 10, page * 10);
