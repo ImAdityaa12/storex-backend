@@ -150,6 +150,22 @@ export const addOrderController = async (req: Request, res: Response) => {
     } = req.body;
     const token = req.headers.authorization as string;
     const userId = getCurrentUserId(token);
+    const user = await userModel.findById(userId);
+    if (!user) {
+      res.status(404).json("User not found");
+      return;
+    }
+    if (paymentMethod === "credit") {
+      if (user?.credit < totalAmount) {
+        res.status(400).json("Insufficient credit");
+        return;
+      } else {
+        await userModel.findByIdAndUpdate(userId, {
+          $inc: { credit: -totalAmount },
+        });
+      }
+    }
+    const currentCredit = user.credit - totalAmount;
     const newOrder = new orderModel({
       userId,
       cartItems,
@@ -162,9 +178,14 @@ export const addOrderController = async (req: Request, res: Response) => {
       cartId,
     });
     await newOrder.save();
+    const cart = await cartModel.findById(cartId);
+    if (cart) {
+      await cartModel.findByIdAndDelete(cartId);
+    }
     res.status(200).json({
       message: "Order added successfully",
       order: newOrder,
+      credit: currentCredit,
     });
   } catch (error) {
     console.error(error);
