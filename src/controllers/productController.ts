@@ -172,7 +172,6 @@ export const getCategoryDataController = async (
             isLiked: false,
           }
     );
-    console.log(products.length);
     const pagewiseProducts = products.slice((page - 1) * 10, page * 10);
     res.status(200).json({ products: pagewiseProducts });
   } catch (error) {
