@@ -50,7 +50,6 @@ export const loginController = async (req: Request, res: Response) => {
     } else {
       user = await userModel.findOne({ phoneNumber: phoneOrEmail });
     }
-    console.log(user);
     if (!user || !user.password) {
       res.status(401).json({ message: "Invalid credentials" });
       return;
