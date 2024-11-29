@@ -12,6 +12,11 @@ export const registerController = async (req: Request, res: Response) => {
       res.status(400).json({ message: "User already exists" });
       return;
     }
+    const uniquePhoneNumber = await userModel.findOne({ phoneNumber });
+    if (uniquePhoneNumber) {
+      res.status(400).json({ message: "Phone number already exists" });
+      return;
+    }
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
     const user = await userModel.create({
@@ -23,13 +28,6 @@ export const registerController = async (req: Request, res: Response) => {
       image,
     });
     const token = generateToken(email, user);
-    // res.cookie("token", token, {
-    //   httpOnly: true,
-    //   secure: true, // Required for HTTPS
-    //   sameSite: "none", // Required for cross-domain cookies
-    //   maxAge: 24 * 60 * 60 * 1000,
-    //   path: "/",
-    // });
     res.status(201).json({ message: "User created successfully", token });
   } catch (error) {
     console.error(error);
@@ -40,15 +38,19 @@ export const registerController = async (req: Request, res: Response) => {
 };
 export const loginController = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { phoneOrEmail, password } = req.body;
 
-    if (!email || !password) {
+    if (!phoneOrEmail || !password) {
       res.status(400).json({ message: "Email and password are required" });
       return;
     }
-
-    const user = await userModel.findOne({ email });
-
+    let user;
+    if (phoneOrEmail.includes("@")) {
+      user = await userModel.findOne({ email: phoneOrEmail });
+    } else {
+      user = await userModel.findOne({ phoneNumber: phoneOrEmail });
+    }
+    console.log(user);
     if (!user || !user.password) {
       res.status(401).json({ message: "Invalid credentials" });
       return;
@@ -61,16 +63,7 @@ export const loginController = async (req: Request, res: Response) => {
       return;
     }
 
-    const token = generateToken(email, user);
-    // res.cookie("token", token, {
-    //   httpOnly: true,
-    //   secure: true, // Required for HTTPS
-    //   sameSite: "none", // Required for cross-domain cookies
-    //   maxAge: 24 * 60 * 60 * 1000, // Cookie expiry (e.g., 24 hours)
-    //   // Don't set domain unless you specifically need to
-    //   path: "/",
-    // });
-
+    const token = generateToken(user.email, user);
     res.status(200).json({ message: "Logged in successfully", token });
   } catch (error) {
     console.error("Login error:", error);
