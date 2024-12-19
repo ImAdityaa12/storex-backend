@@ -157,7 +157,12 @@ export const addOrderController = async (req: Request, res: Response) => {
     }
     if (paymentMethod === "credit") {
       if (user?.credit < totalAmount) {
-        res.status(400).json("Insufficient credit");
+        res
+          .status(400)
+          .json({
+            message: "Insufficient credit for this order",
+            success: false,
+          });
         return;
       } else {
         await userModel.findByIdAndUpdate(userId, {
