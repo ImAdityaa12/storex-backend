@@ -4,8 +4,6 @@ import orderModel from "../models/orderModel";
 import cartModel from "../models/cartModel";
 import { getCurrentUserId } from "../utils/currentUserId";
 import userModel from "../models/userModel";
-import productModel from "../models/productModel";
-import console from "console";
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
@@ -137,15 +135,8 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     return;
   }
 };
+
 export const addOrderController = async (req: Request, res: Response) => {
-  type cartItemType = {
-    productId: string;
-    title: string;
-    image: number;
-    price: number;
-    salePrice: number;
-    quantity: number;
-  };
   try {
     const {
       cartItems,
@@ -175,14 +166,8 @@ export const addOrderController = async (req: Request, res: Response) => {
         await userModel.findByIdAndUpdate(userId, {
           $inc: { credit: -totalAmount },
         });
-        for (const item of cartItems) {
-          await productModel.findByIdAndUpdate(item.productId, {
-            $inc: { totalStock: -item.quantity },
-          });
-        }
       }
     }
-
     const currentCredit = user.credit - totalAmount;
     const newOrder = new orderModel({
       userId,
