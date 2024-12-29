@@ -4,6 +4,7 @@ import orderModel from "../models/orderModel";
 import cartModel from "../models/cartModel";
 import { getCurrentUserId } from "../utils/currentUserId";
 import userModel from "../models/userModel";
+import productModel from "../models/productModel";
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
@@ -126,6 +127,16 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       return;
     }
     order.orderStatus = orderStatus;
+    if (orderStatus === "Completed") {
+      for (const item of order.cartItems) {
+        if (item.quantity !== undefined && item.quantity !== null) {
+          await productModel.findByIdAndUpdate(item.productId, {
+            $inc: { totalStock: -item.quantity },
+          });
+          console.log("Stock updated");
+        }
+      }
+    }
     order.paymentStatus = paymentStatus;
     await order.save();
     res.status(200).json({ message: "Order status updated successfully" });
