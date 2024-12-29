@@ -42,5 +42,5 @@ app.use("/users/address", addressRoute);
 app.use("/user/order", orderRouter);
 app.use("/upload/image", upload.single("image"), handleImageUploadController);
 app.listen(port, () => {
-  console.log(`1[server]: Server is running at http://localhost:${port}`);
+  console.log(`[server]: Server is running at http://localhost:${port}`);
 });
