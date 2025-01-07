@@ -20,6 +20,10 @@ const cartSchema = new mongoose.Schema(
             required: true,
             min: 1,
           },
+          price: {
+            type: Number,
+            require: false,
+          },
         },
       ],
       default: [], // Added default empty array
