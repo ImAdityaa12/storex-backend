@@ -6,6 +6,7 @@ import {
   getLatestProductsController,
   getProductDetailsController,
   getSimilarProductsController,
+  productQuantityDiscountController,
   saveProductController,
   searchProductsController,
 } from "../controllers/productController";
@@ -18,4 +19,5 @@ router.get("/search", searchProductsController);
 router.get("/:category", getCategoryDataController);
 router.get("/getSimilarProducts/:id", getSimilarProductsController);
 router.get("/latestProducts/get", getLatestProductsController);
+router.post("/discount", productQuantityDiscountController);
 export default router;
