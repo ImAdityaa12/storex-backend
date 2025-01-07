@@ -15,6 +15,7 @@ interface IProduct {
 interface ICartItem {
   productId: IProduct;
   quantity: number;
+  price?: number;
   _id: Types.ObjectId;
 }
 
@@ -35,7 +36,7 @@ interface CartResponse {
 
 export const addToCartController = async (req: Request, res: Response) => {
   try {
-    const { productId, quantity } = req.body;
+    const { productId, quantity, price } = req.body;
     const token = req.headers.authorization;
     if (!token) {
       res.status(401).json("Unauthorized");
@@ -62,7 +63,7 @@ export const addToCartController = async (req: Request, res: Response) => {
       (item) => item.productId.toString() === productId
     );
     if (findCurrentProductIndex === -1) {
-      cart.items.push({ productId, quantity });
+      cart.items.push({ productId, quantity, price });
     } else {
       cart.items[findCurrentProductIndex].quantity += quantity;
     }
@@ -101,7 +102,7 @@ export const fetchCartController = async (
       productId: item.productId._id,
       title: item.productId.title,
       image: item.productId.image,
-      price: item.productId.price,
+      price: item.price || item.productId.price,
       salePrice: item.productId.salePrice,
       quantity: item.quantity,
     }));
