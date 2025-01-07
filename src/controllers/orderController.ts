@@ -133,7 +133,6 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
           await productModel.findByIdAndUpdate(item.productId, {
             $inc: { totalStock: -item.quantity },
           });
-          console.log("Stock updated");
         }
       }
     }
