@@ -75,7 +75,7 @@ const calculateDiscountedProductQuantityPrice = (
 };
 export const addToCartController = async (req: Request, res: Response) => {
   try {
-    const { productId, quantity } = req.body;
+    const { productId, quantity, minQuantityFlag } = req.body;
     const token = req.headers.authorization;
     if (!token) {
       res.status(401).json("Unauthorized");
@@ -101,6 +101,34 @@ export const addToCartController = async (req: Request, res: Response) => {
     const findCurrentProductIndex = cart.items.findIndex(
       (item) => item.productId.toString() === productId
     );
+    if (minQuantityFlag) {
+      if (findCurrentProductIndex === -1) {
+        const discontedPrice = calculateDiscountedProductQuantityPrice(
+          product.quantityDiscounts,
+          quantity,
+          product.price ?? 0
+        );
+        cart.items.push({
+          productId,
+          quantity,
+          price: discontedPrice,
+        });
+        await cart.save();
+        res.status(201).json(cart);
+        return;
+      } else {
+        const discontedPrice = calculateDiscountedProductQuantityPrice(
+          product.quantityDiscounts,
+          quantity,
+          product.price ?? 0
+        );
+        cart.items[findCurrentProductIndex].quantity = quantity;
+        cart.items[findCurrentProductIndex].price = discontedPrice;
+        await cart.save();
+        res.status(201).json(cart);
+        return;
+      }
+    }
     if (findCurrentProductIndex === -1) {
       const discontedPrice = calculateDiscountedProductQuantityPrice(
         product.quantityDiscounts,
