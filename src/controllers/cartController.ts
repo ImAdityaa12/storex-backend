@@ -33,6 +33,7 @@ interface CartResponse {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
   items: TransformedCartItem[];
+  total: number;
 }
 const calculateDiscountedProductQuantityPrice = (
   minQuantiyPrice: {
@@ -162,11 +163,12 @@ export const fetchCartController = async (
       salePrice: item.productId.salePrice,
       quantity: item.quantity,
     }));
-
+    const total = items.reduce((acc, item) => acc + item.price, 0);
     const response: CartResponse = {
       _id: cart._id,
       userId: cart.userId,
       items,
+      total,
     };
 
     res.status(200).json(response);
