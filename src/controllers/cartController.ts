@@ -4,6 +4,7 @@ import productModel from "../models/productModel";
 import { Types } from "mongoose";
 import userModel from "../models/userModel";
 import { getCurrentUserId } from "../utils/currentUserId";
+import console from "console";
 interface IProduct {
   _id: Types.ObjectId;
   image: string;
@@ -33,10 +34,43 @@ interface CartResponse {
   userId: Types.ObjectId;
   items: TransformedCartItem[];
 }
+const calculateDiscountedProductQuantityPrice = (
+  minQuantiyPrice: {
+    minQuantity: number;
+    discountedPrice: number;
+  }[],
+  currentQuantity: number,
+  perPiecePrice: number
+) => {
+  const sortedMinQuantiyPrice = minQuantiyPrice.sort(
+    (a, b) => b.minQuantity - a.minQuantity
+  );
 
+  // Find the first matching discount tier
+  const matchingDiscount = sortedMinQuantiyPrice.find(
+    (discountQuantiyAndPrice) =>
+      currentQuantity >= discountQuantiyAndPrice.minQuantity
+  );
+
+  if (matchingDiscount) {
+    const remainingPieces = currentQuantity % matchingDiscount.minQuantity;
+    // console.log("here");
+    const remainingPiecesPrice = remainingPieces * perPiecePrice;
+    // console.log(remainingPieces);
+    const itemQuantitySets = Math.floor(
+      currentQuantity / matchingDiscount.minQuantity
+    );
+    // console.log(itemQuantitySets);
+    const itemQuantitySetsPrice =
+      itemQuantitySets * matchingDiscount.discountedPrice;
+    return remainingPiecesPrice + itemQuantitySetsPrice;
+  }
+  // console.log("here again");
+  return perPiecePrice * currentQuantity;
+};
 export const addToCartController = async (req: Request, res: Response) => {
   try {
-    const { productId, quantity, price } = req.body;
+    const { productId, quantity } = req.body;
     const token = req.headers.authorization;
     if (!token) {
       res.status(401).json("Unauthorized");
@@ -63,9 +97,24 @@ export const addToCartController = async (req: Request, res: Response) => {
       (item) => item.productId.toString() === productId
     );
     if (findCurrentProductIndex === -1) {
-      cart.items.push({ productId, quantity, price });
+      const discontedPrice = calculateDiscountedProductQuantityPrice(
+        product.quantityDiscounts,
+        quantity,
+        product.salePrice ?? product.price ?? 0
+      );
+      cart.items.push({
+        productId,
+        quantity,
+        price: discontedPrice,
+      });
     } else {
-      cart.items[findCurrentProductIndex].quantity += quantity;
+      const discontedPrice = calculateDiscountedProductQuantityPrice(
+        product.quantityDiscounts,
+        cart.items[findCurrentProductIndex].quantity + 1,
+        product.salePrice ?? product.price ?? 0
+      );
+      cart.items[findCurrentProductIndex].quantity += 1;
+      cart.items[findCurrentProductIndex].price = discontedPrice;
     }
     await cart.save();
     res.status(201).json(cart);
