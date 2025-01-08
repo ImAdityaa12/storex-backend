@@ -1,8 +1,4 @@
 import mongoose from "mongoose";
-interface QuantityDiscount {
-  minQuantity: number;
-  discountedPrice: number;
-}
 const quantityDiscountSchema = new mongoose.Schema({
   minQuantity: {
     type: Number,
