@@ -56,6 +56,7 @@ const calculateDiscountedProductQuantityPrice = (
     const remainingPieces = currentQuantity % matchingDiscount.minQuantity;
     // console.log("here");
     const remainingPiecesPrice = remainingPieces * perPiecePrice;
+    // console.log(currentQuantity);
     // console.log(remainingPieces);
     const itemQuantitySets = Math.floor(
       currentQuantity / matchingDiscount.minQuantity
@@ -102,6 +103,7 @@ export const addToCartController = async (req: Request, res: Response) => {
         quantity,
         product.salePrice ?? product.price ?? 0
       );
+      // console.log(discontedPrice);
       cart.items.push({
         productId,
         quantity,
@@ -113,6 +115,7 @@ export const addToCartController = async (req: Request, res: Response) => {
         cart.items[findCurrentProductIndex].quantity + 1,
         product.salePrice ?? product.price ?? 0
       );
+      // console.log(discontedPrice);
       cart.items[findCurrentProductIndex].quantity += 1;
       cart.items[findCurrentProductIndex].price = discontedPrice;
     }
