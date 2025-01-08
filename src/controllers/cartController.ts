@@ -224,9 +224,14 @@ export const updateCartItemQuantityController = async (
           res.status(200).json(cart);
           return;
         }
-        cart.items[findCurrentProductIndex].quantity = cart.items[
-          findCurrentProductIndex
-        ].quantity -= 1;
+        const product = await productModel.findById(productId);
+        const discountedPrice = calculateDiscountedProductQuantityPrice(
+          product?.quantityDiscounts ?? [],
+          cart.items[findCurrentProductIndex].quantity - 1,
+          product?.salePrice ?? product?.price ?? 0
+        );
+        cart.items[findCurrentProductIndex].quantity -= 1;
+        cart.items[findCurrentProductIndex].price = discountedPrice;
         await cart.save();
       }
       res.status(200).json(cart);
