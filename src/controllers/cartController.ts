@@ -42,6 +42,9 @@ const calculateDiscountedProductQuantityPrice = (
   currentQuantity: number,
   perPiecePrice: number
 ) => {
+  if (minQuantiyPrice.length === 0) {
+    return perPiecePrice * currentQuantity;
+  }
   const sortedMinQuantiyPrice = minQuantiyPrice.sort(
     (a, b) => b.minQuantity - a.minQuantity
   );
@@ -83,7 +86,7 @@ export const addToCartController = async (req: Request, res: Response) => {
     }
     const product = await productModel.findById(productId);
     if (!product) {
-      res.status(400).json("Product not found in databse");
+      res.status(400).json("Product not found in database");
       return;
     }
     const userId = getCurrentUserId(token);
@@ -154,6 +157,7 @@ export const fetchCartController = async (
       productId: item.productId._id,
       title: item.productId.title,
       image: item.productId.image,
+      originalPrice: item.productId.salePrice * item.quantity,
       price: item.price || item.productId.price,
       salePrice: item.productId.salePrice,
       quantity: item.quantity,
