@@ -272,7 +272,14 @@ export const updateCartItemCustomQuantityController = async (
       return;
     } else {
       if (typeof quantity === "number") {
+        const product = await productModel.findById(productId);
+        const discountedPrice = calculateDiscountedProductQuantityPrice(
+          product?.quantityDiscounts ?? [],
+          quantity,
+          product?.salePrice ?? product?.price ?? 0
+        );
         cart.items[findCurrentProductIndex].quantity = quantity;
+        cart.items[findCurrentProductIndex].price = discountedPrice;
         await cart.save();
       }
       res.status(200).json(cart);
