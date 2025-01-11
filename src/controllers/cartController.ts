@@ -4,6 +4,7 @@ import productModel from "../models/productModel";
 import { Types } from "mongoose";
 import userModel from "../models/userModel";
 import { getCurrentUserId } from "../utils/currentUserId";
+import console from "console";
 interface IProduct {
   _id: Types.ObjectId;
   image: string;
@@ -15,6 +16,7 @@ interface IProduct {
 interface ICartItem {
   productId: IProduct;
   quantity: number;
+  price?: number;
   _id: Types.ObjectId;
 }
 
@@ -31,11 +33,49 @@ interface CartResponse {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
   items: TransformedCartItem[];
+  total: number;
 }
+const calculateDiscountedProductQuantityPrice = (
+  minQuantiyPrice: {
+    minQuantity: number;
+    discountedPrice: number;
+  }[],
+  currentQuantity: number,
+  perPiecePrice: number
+) => {
+  if (minQuantiyPrice.length === 0) {
+    return perPiecePrice * currentQuantity;
+  }
+  const sortedMinQuantiyPrice = minQuantiyPrice.sort(
+    (a, b) => b.minQuantity - a.minQuantity
+  );
 
+  // Find the first matching discount tier
+  const matchingDiscount = sortedMinQuantiyPrice.find(
+    (discountQuantiyAndPrice) =>
+      currentQuantity >= discountQuantiyAndPrice.minQuantity
+  );
+
+  if (matchingDiscount) {
+    const remainingPieces = currentQuantity % matchingDiscount.minQuantity;
+    // console.log("here");
+    const remainingPiecesPrice = remainingPieces * perPiecePrice;
+    // console.log(currentQuantity);
+    // console.log(remainingPieces);
+    const itemQuantitySets = Math.floor(
+      currentQuantity / matchingDiscount.minQuantity
+    );
+    // console.log(itemQuantitySets);
+    const itemQuantitySetsPrice =
+      itemQuantitySets * matchingDiscount.discountedPrice;
+    return remainingPiecesPrice + itemQuantitySetsPrice;
+  }
+  // console.log("here again");
+  return perPiecePrice * currentQuantity;
+};
 export const addToCartController = async (req: Request, res: Response) => {
   try {
-    const { productId, quantity } = req.body;
+    const { productId, quantity, minQuantityFlag } = req.body;
     const token = req.headers.authorization;
     if (!token) {
       res.status(401).json("Unauthorized");
@@ -47,7 +87,7 @@ export const addToCartController = async (req: Request, res: Response) => {
     }
     const product = await productModel.findById(productId);
     if (!product) {
-      res.status(400).json("Product not found in databse");
+      res.status(400).json("Product not found in database");
       return;
     }
     const userId = getCurrentUserId(token);
@@ -61,10 +101,55 @@ export const addToCartController = async (req: Request, res: Response) => {
     const findCurrentProductIndex = cart.items.findIndex(
       (item) => item.productId.toString() === productId
     );
+    if (minQuantityFlag) {
+      if (findCurrentProductIndex === -1) {
+        const discontedPrice = calculateDiscountedProductQuantityPrice(
+          product.quantityDiscounts,
+          quantity,
+          product.price ?? 0
+        );
+        cart.items.push({
+          productId,
+          quantity,
+          price: discontedPrice,
+        });
+        await cart.save();
+        res.status(201).json(cart);
+        return;
+      } else {
+        const discontedPrice = calculateDiscountedProductQuantityPrice(
+          product.quantityDiscounts,
+          quantity,
+          product.price ?? 0
+        );
+        cart.items[findCurrentProductIndex].quantity = quantity;
+        cart.items[findCurrentProductIndex].price = discontedPrice;
+        await cart.save();
+        res.status(201).json(cart);
+        return;
+      }
+    }
     if (findCurrentProductIndex === -1) {
-      cart.items.push({ productId, quantity });
+      const discontedPrice = calculateDiscountedProductQuantityPrice(
+        product.quantityDiscounts,
+        quantity,
+        product.salePrice ?? product.price ?? 0
+      );
+      // console.log(discontedPrice);
+      cart.items.push({
+        productId,
+        quantity,
+        price: discontedPrice,
+      });
     } else {
-      cart.items[findCurrentProductIndex].quantity += quantity;
+      const discontedPrice = calculateDiscountedProductQuantityPrice(
+        product.quantityDiscounts,
+        cart.items[findCurrentProductIndex].quantity + 1,
+        product.salePrice ?? product.price ?? 0
+      );
+      // console.log(discontedPrice);
+      cart.items[findCurrentProductIndex].quantity += 1;
+      cart.items[findCurrentProductIndex].price = discontedPrice;
     }
     await cart.save();
     res.status(201).json(cart);
@@ -101,15 +186,17 @@ export const fetchCartController = async (
       productId: item.productId._id,
       title: item.productId.title,
       image: item.productId.image,
-      price: item.productId.price,
+      originalPrice: item.productId.salePrice * item.quantity,
+      price: item.price || item.productId.price,
       salePrice: item.productId.salePrice,
       quantity: item.quantity,
     }));
-
+    const total = items.reduce((acc, item) => acc + item.price, 0);
     const response: CartResponse = {
       _id: cart._id,
       userId: cart.userId,
       items,
+      total,
     };
 
     res.status(200).json(response);
@@ -150,7 +237,14 @@ export const updateCartItemQuantityController = async (
       return;
     } else {
       if (quantity === "plus") {
+        const product = await productModel.findById(productId);
+        const discountedPrice = calculateDiscountedProductQuantityPrice(
+          product?.quantityDiscounts ?? [],
+          cart.items[findCurrentProductIndex].quantity + 1,
+          product?.salePrice ?? product?.price ?? 0
+        );
         cart.items[findCurrentProductIndex].quantity += 1;
+        cart.items[findCurrentProductIndex].price = discountedPrice;
         await cart.save();
       } else {
         if (cart.items[findCurrentProductIndex].quantity === 1) {
@@ -160,9 +254,14 @@ export const updateCartItemQuantityController = async (
           res.status(200).json(cart);
           return;
         }
-        cart.items[findCurrentProductIndex].quantity = cart.items[
-          findCurrentProductIndex
-        ].quantity -= 1;
+        const product = await productModel.findById(productId);
+        const discountedPrice = calculateDiscountedProductQuantityPrice(
+          product?.quantityDiscounts ?? [],
+          cart.items[findCurrentProductIndex].quantity - 1,
+          product?.salePrice ?? product?.price ?? 0
+        );
+        cart.items[findCurrentProductIndex].quantity -= 1;
+        cart.items[findCurrentProductIndex].price = discountedPrice;
         await cart.save();
       }
       res.status(200).json(cart);
@@ -203,7 +302,14 @@ export const updateCartItemCustomQuantityController = async (
       return;
     } else {
       if (typeof quantity === "number") {
+        const product = await productModel.findById(productId);
+        const discountedPrice = calculateDiscountedProductQuantityPrice(
+          product?.quantityDiscounts ?? [],
+          quantity,
+          product?.salePrice ?? product?.price ?? 0
+        );
         cart.items[findCurrentProductIndex].quantity = quantity;
+        cart.items[findCurrentProductIndex].price = discountedPrice;
         await cart.save();
       }
       res.status(200).json(cart);

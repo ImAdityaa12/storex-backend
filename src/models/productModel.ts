@@ -1,5 +1,14 @@
 import mongoose from "mongoose";
-
+const quantityDiscountSchema = new mongoose.Schema({
+  minQuantity: {
+    type: Number,
+    required: true,
+  },
+  discountedPrice: {
+    type: Number,
+    required: true,
+  },
+});
 const productSchema = new mongoose.Schema(
   {
     image: String,
@@ -14,6 +23,10 @@ const productSchema = new mongoose.Schema(
     },
     salePrice: Number,
     totalStock: Number,
+    quantityDiscounts: {
+      type: [quantityDiscountSchema],
+      default: [],
+    },
   },
   { timestamps: true }
 );

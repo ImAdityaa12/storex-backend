@@ -54,6 +54,7 @@ export const addNewProductController = async (req: Request, res: Response) => {
       model,
       salePrice,
       totalStock,
+      discounts,
     } = req.body;
     const product = await productModel.create({
       image,
@@ -65,6 +66,7 @@ export const addNewProductController = async (req: Request, res: Response) => {
       model,
       salePrice,
       totalStock,
+      quantityDiscounts: discounts,
     });
     await product.save();
     res.json({ product });

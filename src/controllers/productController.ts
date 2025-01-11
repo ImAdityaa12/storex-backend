@@ -298,3 +298,33 @@ export const getLatestProductsController = async (
       .json({ message: "An error occurred while searching products" });
   }
 };
+export const productQuantityDiscountController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const token = req.headers.authorization as string;
+    const user = await userModel.findOne({ _id: getCurrentUserId(token) });
+    if (!user) {
+      res.status(400).json("User not found in database");
+      return;
+    }
+    const { productId, quantity, price } = req.body;
+    const product = await productModel.findById(productId);
+    if (!product) {
+      res.status(404).json("Product not found");
+      return;
+    }
+    product.quantityDiscounts.push({
+      minQuantity: parseInt(quantity as string),
+      discountedPrice: parseInt(price as string),
+    });
+    await product.save();
+    res.status(200).json({ product });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while searching products" });
+  }
+};
