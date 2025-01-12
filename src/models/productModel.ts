@@ -23,6 +23,10 @@ const productSchema = new mongoose.Schema(
     },
     salePrice: Number,
     totalStock: Number,
+    limitedStock: {
+      type: Number,
+      default: -1,
+    },
     quantityDiscounts: {
       type: [quantityDiscountSchema],
       default: [],
