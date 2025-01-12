@@ -9,6 +9,7 @@ import categoryModel from "../../models/categoryModel";
 import brandModel from "../../models/brandModel";
 import { model, models } from "mongoose";
 import console from "console";
+import { create } from "domain";
 
 export const getProductsController = async (req: Request, res: Response) => {
   try {
@@ -55,6 +56,7 @@ export const addNewProductController = async (req: Request, res: Response) => {
       salePrice,
       totalStock,
       discounts,
+      limitedStock,
     } = req.body;
     const product = await productModel.create({
       image,
@@ -66,6 +68,7 @@ export const addNewProductController = async (req: Request, res: Response) => {
       model,
       salePrice,
       totalStock,
+      limitedStock,
       quantityDiscounts: discounts,
     });
     await product.save();
@@ -161,8 +164,11 @@ export const getProductDetailsController = async (
 
 export const getOrderController = async (req: Request, res: Response) => {
   try {
-    const orders = await orderModel.find();
-    res.json({ orders });
+    const orders = await orderModel
+      .find()
+      .populate("userId", "name userName")
+      .exec();
+    res.json({ orders: orders.reverse() });
   } catch (error) {
     res
       .status(500)
