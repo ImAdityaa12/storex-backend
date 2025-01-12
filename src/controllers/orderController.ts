@@ -211,8 +211,8 @@ export const getUserOrder = async (req: Request, res: Response) => {
   try {
     const token = req.headers.authorization as string;
     const userId = getCurrentUserId(token);
-    const allUserOrders = await orderModel.find({ userId });
-    const orders = allUserOrders.map((order) => ({
+    const userAllOrder = await orderModel.find({ userId });
+    const orders = userAllOrder.map((order) => ({
       _id: order._id,
       items: order.cartItems,
       total: order.totalAmount,
