@@ -206,6 +206,44 @@ export const fetchCartController = async (
   }
 };
 
+const calculateItemDiscountedPrice = (
+  quantityDiscounts:
+    | {
+        minQuantity: number;
+        discountedPrice: number;
+      }[]
+    | undefined,
+  quantity: number,
+  productPrice: number
+): { price: number; matched: boolean } => {
+  console.log(quantity);
+  if (quantityDiscounts?.length === 0 || quantityDiscounts === undefined) {
+    console.log("here");
+    return { price: productPrice, matched: false };
+  }
+  const currentQuantity = quantity;
+  let price = 0;
+  let matched = false;
+  quantityDiscounts.forEach(
+    (discount: { minQuantity: number; discountedPrice: number }) => {
+      if (discount.minQuantity < currentQuantity) {
+        price = discount.discountedPrice / discount.minQuantity;
+      } else if (discount.minQuantity === currentQuantity) {
+        console.log("Real", currentQuantity);
+        price = calculateDiscountedProductQuantityPrice(
+          quantityDiscounts ?? [],
+          currentQuantity,
+          productPrice
+        );
+        matched = true;
+      }
+    }
+  );
+  return {
+    price: price === 0 ? productPrice : price,
+    matched,
+  };
+};
 export const updateCartItemQuantityController = async (
   req: Request,
   res: Response
@@ -238,30 +276,60 @@ export const updateCartItemQuantityController = async (
     } else {
       if (quantity === "plus") {
         const product = await productModel.findById(productId);
-        const discountedPrice = calculateDiscountedProductQuantityPrice(
-          product?.quantityDiscounts ?? [],
+        const discountedPrice: {
+          price: number;
+          matched: boolean;
+        } = calculateItemDiscountedPrice(
+          product?.quantityDiscounts,
           cart.items[findCurrentProductIndex].quantity + 1,
           product?.salePrice ?? product?.price ?? 0
         );
+        console.log(discountedPrice);
         cart.items[findCurrentProductIndex].quantity += 1;
-        cart.items[findCurrentProductIndex].price = discountedPrice;
+        if (
+          cart.items[findCurrentProductIndex].price &&
+          !discountedPrice.matched
+        ) {
+          cart.items[findCurrentProductIndex].price +=
+            discountedPrice.price ?? product?.salePrice ?? product?.price ?? 0;
+        } else if (
+          cart.items[findCurrentProductIndex].price &&
+          discountedPrice.matched
+        ) {
+          cart.items[findCurrentProductIndex].price =
+            discountedPrice.price ?? product?.salePrice ?? product?.price ?? 0;
+        }
         await cart.save();
       } else {
         if (cart.items[findCurrentProductIndex].quantity === 1) {
           cart.items.splice(findCurrentProductIndex, 1);
           await cart.save();
-          // console.log(cart.items[findCurrentProductIndex].quantity);
           res.status(200).json(cart);
           return;
         }
         const product = await productModel.findById(productId);
-        const discountedPrice = calculateDiscountedProductQuantityPrice(
-          product?.quantityDiscounts ?? [],
+        const discountedPrice: {
+          price: number;
+          matched: boolean;
+        } = calculateItemDiscountedPrice(
+          product?.quantityDiscounts,
           cart.items[findCurrentProductIndex].quantity - 1,
           product?.salePrice ?? product?.price ?? 0
         );
         cart.items[findCurrentProductIndex].quantity -= 1;
-        cart.items[findCurrentProductIndex].price = discountedPrice;
+        if (
+          cart.items[findCurrentProductIndex].price &&
+          !discountedPrice.matched
+        ) {
+          cart.items[findCurrentProductIndex].price -=
+            discountedPrice.price ?? product?.salePrice ?? product?.price ?? 0;
+        } else if (
+          cart.items[findCurrentProductIndex].price &&
+          discountedPrice.matched
+        ) {
+          cart.items[findCurrentProductIndex].price =
+            discountedPrice.price ?? product?.salePrice ?? product?.price ?? 0;
+        }
         await cart.save();
       }
       res.status(200).json(cart);
