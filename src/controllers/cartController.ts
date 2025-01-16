@@ -76,7 +76,6 @@ const calculateDiscountedProductQuantityPrice = (
 export const addToCartController = async (req: Request, res: Response) => {
   try {
     const { productId, quantity, minQuantityFlag } = req.body;
-    console.log(minQuantityFlag, quantity, productId);
     const token = req.headers.authorization;
     if (!token) {
       res.status(401).json("Unauthorized");
@@ -118,59 +117,25 @@ export const addToCartController = async (req: Request, res: Response) => {
         res.status(201).json(cart.items);
         return;
       }
+    } else {
+      if (findCurrentProductIndex === -1) {
+        cart.items.push({
+          productId,
+          quantity,
+          price: calculateDiscountedProductQuantityPrice(
+            product.quantityDiscounts,
+            quantity,
+            product.salePrice ?? 0
+          ),
+        });
+        await cart.save();
+        res.status(201).json(cart.items);
+        return;
+      } else {
+        res.json("Product Quantity already in cart");
+        return;
+      }
     }
-    // if (minQuantityFlag) {
-    //   if (findCurrentProductIndex === -1) {
-    //     const discontedPrice = calculateDiscountedProductQuantityPrice(
-    //       product.quantityDiscounts,
-    //       quantity,
-    //       product.price ?? 0
-    //     );
-    //     cart.items.push({
-    //       productId,
-    //       quantity,
-    //       price: discontedPrice,
-    //     });
-    //     await cart.save();
-    //     res.status(201).json(cart);
-    //     return;
-    //   } else {
-    //     const discontedPrice = calculateDiscountedProductQuantityPrice(
-    //       product.quantityDiscounts,
-    //       quantity,
-    //       product.price ?? 0
-    //     );
-    //     cart.items[findCurrentProductIndex].quantity = quantity;
-    //     cart.items[findCurrentProductIndex].price = discontedPrice;
-    //     await cart.save();
-    //     res.status(201).json(cart);
-    //     return;
-    //   }
-    // }
-    // if (findCurrentProductIndex === -1) {
-    //   const discontedPrice = calculateDiscountedProductQuantityPrice(
-    //     product.quantityDiscounts,
-    //     quantity,
-    //     product.salePrice ?? product.price ?? 0
-    //   );
-    //   // console.log(discontedPrice);
-    //   cart.items.push({
-    //     productId,
-    //     quantity,
-    //     price: discontedPrice,
-    //   });
-    // } else {
-    //   const discontedPrice = calculateDiscountedProductQuantityPrice(
-    //     product.quantityDiscounts,
-    //     cart.items[findCurrentProductIndex].quantity + 1,
-    //     product.salePrice ?? product.price ?? 0
-    //   );
-    //   // console.log(discontedPrice);
-    //   cart.items[findCurrentProductIndex].quantity += 1;
-    //   cart.items[findCurrentProductIndex].price = discontedPrice;
-    // }
-    await cart.save();
-    res.status(201).json(cart);
   } catch (error) {
     console.error(error);
     res.status(500).json("An error occurred");
