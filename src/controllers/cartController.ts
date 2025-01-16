@@ -216,9 +216,7 @@ const calculateItemDiscountedPrice = (
   quantity: number,
   productPrice: number
 ): { price: number; matched: boolean } => {
-  console.log(quantity);
   if (quantityDiscounts?.length === 0 || quantityDiscounts === undefined) {
-    console.log("here");
     return { price: productPrice, matched: false };
   }
   const currentQuantity = quantity;
@@ -284,7 +282,6 @@ export const updateCartItemQuantityController = async (
           cart.items[findCurrentProductIndex].quantity + 1,
           product?.salePrice ?? product?.price ?? 0
         );
-        console.log(discountedPrice);
         cart.items[findCurrentProductIndex].quantity += 1;
         if (
           cart.items[findCurrentProductIndex].price &&
