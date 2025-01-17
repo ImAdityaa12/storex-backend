@@ -321,11 +321,19 @@ export const updateCartItemCustomQuantityController = async (
     } else {
       if (typeof quantity === "number") {
         const product = await productModel.findById(productId);
-        const discountedPrice = calculateDiscountedProductQuantityPrice(
-          product?.quantityDiscounts ?? [],
-          quantity,
-          product?.salePrice ?? product?.price ?? 0
-        );
+        let discountedPrice = product?.salePrice ?? 0;
+        product?.quantityDiscounts
+          .sort((a, b) => b.minQuantity - a.minQuantity)
+          .slice(0, product.quantityDiscounts.length - 1)
+          .forEach((discount) => {
+            if (discount.minQuantity <= quantity) {
+              const maxDiscount =
+                discount.discountedPrice / discount.minQuantity;
+              if (maxDiscount < discountedPrice) {
+                discountedPrice = maxDiscount;
+              }
+            }
+          });
         cart.items[findCurrentProductIndex].quantity = quantity;
         cart.items[findCurrentProductIndex].price = discountedPrice;
         await cart.save();
