@@ -101,58 +101,45 @@ export const addToCartController = async (req: Request, res: Response) => {
     const findCurrentProductIndex = cart.items.findIndex(
       (item) => item.productId.toString() === productId
     );
-    if (minQuantityFlag) {
+    if (!minQuantityFlag) {
       if (findCurrentProductIndex === -1) {
-        const discontedPrice = calculateDiscountedProductQuantityPrice(
-          product.quantityDiscounts,
-          quantity,
-          product.price ?? 0
-        );
+        cart.items.push({
+          price: product.salePrice,
+          productId,
+          quantity: 1,
+        });
+        await cart.save();
+        res.status(201).json(cart.items);
+        return;
+      } else {
+        cart.items[findCurrentProductIndex].quantity += quantity;
+        await cart.save();
+        res.status(201).json(cart.items);
+        return;
+      }
+    } else {
+      const discountedPriceIndex = product.quantityDiscounts.findIndex(
+        (discount) => {
+          return discount.minQuantity === quantity;
+        }
+      );
+      const perPiecePrice =
+        product.quantityDiscounts[discountedPriceIndex].discountedPrice /
+        product.quantityDiscounts[discountedPriceIndex].minQuantity;
+      if (findCurrentProductIndex === -1) {
         cart.items.push({
           productId,
           quantity,
-          price: discontedPrice,
+          price: perPiecePrice,
         });
         await cart.save();
-        res.status(201).json(cart);
+        res.status(201).json(cart.items);
         return;
       } else {
-        const discontedPrice = calculateDiscountedProductQuantityPrice(
-          product.quantityDiscounts,
-          quantity,
-          product.price ?? 0
-        );
-        cart.items[findCurrentProductIndex].quantity = quantity;
-        cart.items[findCurrentProductIndex].price = discontedPrice;
-        await cart.save();
-        res.status(201).json(cart);
+        res.json("Product Quantity already in cart");
         return;
       }
     }
-    if (findCurrentProductIndex === -1) {
-      const discontedPrice = calculateDiscountedProductQuantityPrice(
-        product.quantityDiscounts,
-        quantity,
-        product.salePrice ?? product.price ?? 0
-      );
-      // console.log(discontedPrice);
-      cart.items.push({
-        productId,
-        quantity,
-        price: discontedPrice,
-      });
-    } else {
-      const discontedPrice = calculateDiscountedProductQuantityPrice(
-        product.quantityDiscounts,
-        cart.items[findCurrentProductIndex].quantity + 1,
-        product.salePrice ?? product.price ?? 0
-      );
-      // console.log(discontedPrice);
-      cart.items[findCurrentProductIndex].quantity += 1;
-      cart.items[findCurrentProductIndex].price = discontedPrice;
-    }
-    await cart.save();
-    res.status(201).json(cart);
   } catch (error) {
     console.error(error);
     res.status(500).json("An error occurred");
@@ -191,7 +178,10 @@ export const fetchCartController = async (
       salePrice: item.productId.salePrice,
       quantity: item.quantity,
     }));
-    const total = items.reduce((acc, item) => acc + item.price, 0);
+    const total = items.reduce(
+      (acc, item) => acc + item.price * item.quantity,
+      0
+    );
     const response: CartResponse = {
       _id: cart._id,
       userId: cart.userId,
@@ -229,42 +219,70 @@ export const updateCartItemQuantityController = async (
       return;
     }
 
+    const product = await productModel.findById(productId);
     const findCurrentProductIndex = cart.items.findIndex(
       (item) => item.productId.toString() === productId
     );
-    if (findCurrentProductIndex === -1) {
-      res.status(400).json("Product not found in cart");
-      return;
-    } else {
-      if (quantity === "plus") {
-        const product = await productModel.findById(productId);
-        const discountedPrice = calculateDiscountedProductQuantityPrice(
-          product?.quantityDiscounts ?? [],
-          cart.items[findCurrentProductIndex].quantity + 1,
-          product?.salePrice ?? product?.price ?? 0
-        );
+    if (quantity === "plus") {
+      if (product?.quantityDiscounts?.length === 0) {
+        cart.items[findCurrentProductIndex].quantity += 1;
+        cart.items[findCurrentProductIndex].price = product.salePrice;
+        await cart.save();
+        res.status(200).json(cart.items);
+        return;
+      } else {
+        let discountedPrice = product?.salePrice ?? 0;
+        product?.quantityDiscounts
+          .sort((a, b) => b.minQuantity - a.minQuantity)
+          .slice(0, product.quantityDiscounts.length - 1)
+          .forEach((discount) => {
+            if (
+              discount.minQuantity <=
+              cart.items[findCurrentProductIndex].quantity + 1
+            ) {
+              const maxDiscount =
+                discount.discountedPrice / discount.minQuantity;
+              if (maxDiscount < discountedPrice) {
+                discountedPrice = maxDiscount;
+              }
+            }
+          });
         cart.items[findCurrentProductIndex].quantity += 1;
         cart.items[findCurrentProductIndex].price = discountedPrice;
         await cart.save();
+        res.status(200).json(cart.items);
+        return;
+      }
+    } else {
+      if (product?.quantityDiscounts?.length === 0) {
+        cart.items[findCurrentProductIndex].quantity += 1;
+        cart.items[findCurrentProductIndex].price = product.salePrice;
+        await cart.save();
+        res.status(200).json(cart.items);
+        return;
       } else {
-        if (cart.items[findCurrentProductIndex].quantity === 1) {
-          cart.items.splice(findCurrentProductIndex, 1);
-          await cart.save();
-          // console.log(cart.items[findCurrentProductIndex].quantity);
-          res.status(200).json(cart);
-          return;
-        }
-        const product = await productModel.findById(productId);
-        const discountedPrice = calculateDiscountedProductQuantityPrice(
-          product?.quantityDiscounts ?? [],
-          cart.items[findCurrentProductIndex].quantity - 1,
-          product?.salePrice ?? product?.price ?? 0
-        );
+        let discountedPrice = product?.salePrice ?? 0;
+        product?.quantityDiscounts
+          .sort((a, b) => b.minQuantity - a.minQuantity)
+          .slice(0, product.quantityDiscounts.length - 1)
+          .forEach((discount) => {
+            if (
+              discount.minQuantity <=
+              cart.items[findCurrentProductIndex].quantity - 1
+            ) {
+              const maxDiscount =
+                discount.discountedPrice / discount.minQuantity;
+              if (maxDiscount < discountedPrice) {
+                discountedPrice = maxDiscount;
+              }
+            }
+          });
         cart.items[findCurrentProductIndex].quantity -= 1;
         cart.items[findCurrentProductIndex].price = discountedPrice;
         await cart.save();
+        res.status(200).json(cart.items);
+        return;
       }
-      res.status(200).json(cart);
     }
   } catch (error) {
     console.error(error);
