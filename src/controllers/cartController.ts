@@ -235,7 +235,7 @@ export const updateCartItemQuantityController = async (
         product?.quantityDiscounts
           .sort((a, b) => b.minQuantity - a.minQuantity)
           .slice(0, product.quantityDiscounts.length - 1)
-          .forEach((discount, index) => {
+          .forEach((discount) => {
             if (
               discount.minQuantity <=
               cart.items[findCurrentProductIndex].quantity + 1
