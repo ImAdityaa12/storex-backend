@@ -223,33 +223,66 @@ export const updateCartItemQuantityController = async (
     const findCurrentProductIndex = cart.items.findIndex(
       (item) => item.productId.toString() === productId
     );
-    if (product?.quantityDiscounts?.length === 0) {
-      cart.items[findCurrentProductIndex].quantity += 1;
-      cart.items[findCurrentProductIndex].price = product.salePrice;
-      await cart.save();
-      res.status(200).json(cart.items);
-      return;
-    } else {
-      let discountedPrice = product?.salePrice ?? 0;
-      product?.quantityDiscounts
-        .sort((a, b) => b.minQuantity - a.minQuantity)
-        .slice(0, product.quantityDiscounts.length - 1)
-        .forEach((discount, index) => {
-          if (
-            discount.minQuantity <=
-            cart.items[findCurrentProductIndex].quantity + 1
-          ) {
-            const maxDiscount = discount.discountedPrice / discount.minQuantity;
-            if (maxDiscount < discountedPrice) {
-              discountedPrice = maxDiscount;
+    if (quantity === "plus") {
+      if (product?.quantityDiscounts?.length === 0) {
+        cart.items[findCurrentProductIndex].quantity += 1;
+        cart.items[findCurrentProductIndex].price = product.salePrice;
+        await cart.save();
+        res.status(200).json(cart.items);
+        return;
+      } else {
+        let discountedPrice = product?.salePrice ?? 0;
+        product?.quantityDiscounts
+          .sort((a, b) => b.minQuantity - a.minQuantity)
+          .slice(0, product.quantityDiscounts.length - 1)
+          .forEach((discount, index) => {
+            if (
+              discount.minQuantity <=
+              cart.items[findCurrentProductIndex].quantity + 1
+            ) {
+              const maxDiscount =
+                discount.discountedPrice / discount.minQuantity;
+              if (maxDiscount < discountedPrice) {
+                discountedPrice = maxDiscount;
+              }
             }
-          }
-        });
-      cart.items[findCurrentProductIndex].quantity += 1;
-      cart.items[findCurrentProductIndex].price = discountedPrice;
-      await cart.save();
-      res.status(200).json(cart.items);
-      return;
+          });
+        cart.items[findCurrentProductIndex].quantity += 1;
+        cart.items[findCurrentProductIndex].price = discountedPrice;
+        await cart.save();
+        res.status(200).json(cart.items);
+        return;
+      }
+    } else {
+      if (product?.quantityDiscounts?.length === 0) {
+        cart.items[findCurrentProductIndex].quantity += 1;
+        cart.items[findCurrentProductIndex].price = product.salePrice;
+        await cart.save();
+        res.status(200).json(cart.items);
+        return;
+      } else {
+        let discountedPrice = product?.salePrice ?? 0;
+        product?.quantityDiscounts
+          .sort((a, b) => b.minQuantity - a.minQuantity)
+          .slice(0, product.quantityDiscounts.length - 1)
+          .forEach((discount) => {
+            if (
+              discount.minQuantity <=
+              cart.items[findCurrentProductIndex].quantity - 1
+            ) {
+              const maxDiscount =
+                discount.discountedPrice / discount.minQuantity;
+              if (maxDiscount < discountedPrice) {
+                discountedPrice = maxDiscount;
+              }
+            }
+          });
+        cart.items[findCurrentProductIndex].quantity -= 1;
+        cart.items[findCurrentProductIndex].price = discountedPrice;
+        await cart.save();
+        res.status(200).json(cart.items);
+        return;
+      }
     }
   } catch (error) {
     console.error(error);
