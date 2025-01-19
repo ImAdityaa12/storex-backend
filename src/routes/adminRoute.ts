@@ -10,6 +10,7 @@ import {
   getOrderController,
   getProductDetailsController,
   getProductsController,
+  getProductsStocksController,
   getproductTagsController,
   getUsersController,
   handleImageUploadController,
@@ -47,5 +48,7 @@ router.post("/addCategory", addCategoryController);
 router.post("/addBrand", addBrandContoller);
 router.get("/productTags", getproductTagsController);
 router.delete("/deleteTag/:title", deleteTagController);
+router.get("/getProductStock", getProductsStocksController);
+
 // router.post("order/update", updateOrderStatus);
 export default router;
