@@ -15,6 +15,7 @@ import {
   getUsersController,
   handleImageUploadController,
   updateProductController,
+  updateProductStock,
 } from "../controllers/admin/productsController";
 import { upload } from "../utils/cloudinary";
 import {
@@ -49,6 +50,7 @@ router.post("/addBrand", addBrandContoller);
 router.get("/productTags", getproductTagsController);
 router.delete("/deleteTag/:title", deleteTagController);
 router.get("/getProductStock", getProductsStocksController);
+router.put("/updateStock", updateProductStock);
 
 // router.post("order/update", updateOrderStatus);
 export default router;
