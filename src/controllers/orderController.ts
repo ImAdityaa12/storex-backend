@@ -135,6 +135,14 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
           });
         }
       }
+    } else if (orderStatus === "Confirmed" || orderStatus === "In Process") {
+      for (const item of order.cartItems) {
+        if (item.quantity !== undefined && item.quantity !== null) {
+          await productModel.findByIdAndUpdate(item.productId, {
+            $inc: { totalStock: +item.quantity },
+          });
+        }
+      }
     }
     order.paymentStatus = paymentStatus;
     await order.save();
