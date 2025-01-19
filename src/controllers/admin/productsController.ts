@@ -397,3 +397,50 @@ export const deleteTagController = async (req: Request, res: Response) => {
     res.status(500).json({ message: "An error occurred" });
   }
 };
+
+export const getProductsStocksController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const token = req.headers.authorization as string;
+    const userId = getCurrentUserId(token);
+    const user = await userModel.findById(userId);
+    if (user?.role !== "admin") {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+    const products = await productModel
+      .find()
+      .select("title totalStock category image model")
+      .sort({ totalStock: 1 });
+    res.json({ products });
+    return;
+  } catch (error) {
+    res.status(500).json({ message: "An error occurred" });
+  }
+};
+
+export const updateProductStock = async (req: Request, res: Response) => {
+  try {
+    const token = req.headers.authorization as string;
+    const userId = getCurrentUserId(token);
+    const user = await userModel.findById(userId);
+    if (user?.role !== "admin") {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+    const { productId, quantity } = req.body;
+    const product = await productModel.findById(productId);
+    if (!product) {
+      res.status(404).json({ message: "Product not found" });
+      return;
+    }
+    product.totalStock = quantity;
+    await product.save();
+    res.json({ message: "Stock updated successfully" });
+  } catch (error) {
+    console.error("Error updating stock:", error);
+    res.status(500).json({ message: "An error occurred" });
+  }
+};
