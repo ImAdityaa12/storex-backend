@@ -23,7 +23,7 @@ app.use(
   cors({
     origin:
       process.env.PRODUCTION === "true"
-        ? "https://storex-frontend.vercel.app"
+        ? "http://13.201.89.231:3000/"
         : "http://localhost:3000",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
