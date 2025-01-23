@@ -229,7 +229,6 @@ export const updateCartItemQuantityController = async (
       if (product?.quantityDiscounts?.length === 0) {
         cart.items[findCurrentProductIndex].quantity -= 1;
         cart.items[findCurrentProductIndex].price = product.salePrice;
-        console.log(product);
         await cart.save();
         res.status(200).json(cart.items);
         return;
