@@ -312,11 +312,12 @@ export const addOrderController = async (req: Request, res: Response) => {
           Total Amount: ₹${totalAmount}
         </div>
     
+        <p><strong>Payment Status:</strong> ${paymentStatus}</p>
         <p><strong>Order Status:</strong> ${orderStatus}</p>
     
         <div class="footer">
           <p>For any questions about your order, please contact our support team.</p>
-          <p>&copy; 2025 Your Company Name</p>
+          <p>&copy; 2025 Ajit Agencies</p>
         </div>
       </div>
     </body>
