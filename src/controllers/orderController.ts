@@ -5,7 +5,7 @@ import cartModel from "../models/cartModel";
 import { getCurrentUserId } from "../utils/currentUserId";
 import userModel from "../models/userModel";
 import productModel from "../models/productModel";
-
+import nodemailer from "nodemailer";
 export const createOrder = async (req: Request, res: Response) => {
   try {
     const {
@@ -203,6 +203,113 @@ export const addOrderController = async (req: Request, res: Response) => {
     if (cart) {
       await cartModel.findByIdAndDelete(cartId);
     }
+    const transporter = nodemailer.createTransport({
+      service: "gmail", // Use your email provider (e.g., 'gmail', 'yahoo', 'hotmail', etc.)
+      auth: {
+        user: "adityagupta1291@gmail.com", // Your email address
+        pass: process.env.NODEMAILER_ACCOUNT_PASS, // Your email password or app password
+      },
+    });
+    const htmlTemplate = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <style>
+                  .email-container {
+                      max-width: 600px;
+                      margin: 0 auto;
+                      font-family: Arial, sans-serif;
+                      padding: 20px;
+                  }
+                  .header {
+                      background-color: #f8f9fa;
+                      padding: 20px;
+                      text-align: center;
+                      border-radius: 5px;
+                  }
+                  .order-info {
+                      margin: 20px 0;
+                      padding: 15px;
+                      background-color: #ffffff;
+                      border: 1px solid #dee2e6;
+                      border-radius: 5px;
+                  }
+                  .item {
+                      display: flex;
+                      align-items: center;
+                      margin: 10px 0;
+                      padding: 10px;
+                      border-bottom: 1px solid #eee;
+                  }
+                  .item img {
+                      width: 60px;
+                      height: 60px;
+                      margin-right: 15px;
+                      object-fit: cover;
+                  }
+                  .item-details {
+                      flex-grow: 1;
+                  }
+                  .total {
+                      margin-top: 20px;
+                      text-align: right;
+                      font-weight: bold;
+                  }
+                  .footer {
+                      margin-top: 20px;
+                      text-align: center;
+                      color: #6c757d;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="email-container">
+                  <div class="header">
+                      <h2>Order Confirmation</h2>
+                      <p>Thank you for your order!</p>
+                  </div>
+                  
+                  <div class="order-info">
+                      <p><strong>Order Status:</strong> ${orderStatus}</p>
+                      <p><strong>Order Date:</strong> ${new Date(
+                        orderDate
+                      ).toLocaleString()}</p>
+                      
+                      <h3>Order Items:</h3>
+                      ${cartItems
+                        .map(
+                          (item: any) => `
+                          <div class="item">
+                              <img src="${item.image}" alt="${item.title}">
+                              <div class="item-details">
+                                  <h4>${item.title}</h4>
+                                  <p>Price: ₹${item.price}</p>
+                                  <p>Quantity: ${item.quantity}</p>
+                              </div>
+                          </div>
+                      `
+                        )
+                        .join("")}
+                      
+                      <div class="total">
+                          <p>Total Amount: ₹${totalAmount}</p>
+                      </div>
+                  </div>
+                  
+                  <div class="footer">
+                      <p>If you have any questions, please contact our support team.</p>
+                  </div>
+              </div>
+          </body>
+          </html>
+      `;
+    const mailOptions = {
+      from: process.env.NODEMAILER_ACCOUNT_EMAIL,
+      to: user.email,
+      subject: "Order Placed Successfully",
+      html: htmlTemplate,
+    };
+    await transporter.sendMail(mailOptions);
     res.status(200).json({
       message: "Order added successfully",
       order: newOrder,
