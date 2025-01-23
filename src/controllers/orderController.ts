@@ -313,9 +313,10 @@ export const addOrderController = async (req: Request, res: Response) => {
         </div>
     
         <p><strong>Order Status:</strong> ${orderStatus}</p>
+    
         <div class="footer">
           <p>For any questions about your order, please contact our support team.</p>
-          <p>&copy; 2025 Ajit Agencies</p>
+          <p>&copy; 2025 Your Company Name</p>
         </div>
       </div>
     </body>
