@@ -211,98 +211,119 @@ export const addOrderController = async (req: Request, res: Response) => {
       },
     });
     const htmlTemplate = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-              <style>
-                  .email-container {
-                      max-width: 600px;
-                      margin: 0 auto;
-                      font-family: Arial, sans-serif;
-                      padding: 20px;
-                  }
-                  .header {
-                      background-color: #f8f9fa;
-                      padding: 20px;
-                      text-align: center;
-                      border-radius: 5px;
-                  }
-                  .order-info {
-                      margin: 20px 0;
-                      padding: 15px;
-                      background-color: #ffffff;
-                      border: 1px solid #dee2e6;
-                      border-radius: 5px;
-                  }
-                  .item {
-                      display: flex;
-                      align-items: center;
-                      margin: 10px 0;
-                      padding: 10px;
-                      border-bottom: 1px solid #eee;
-                  }
-                  .item img {
-                      width: 60px;
-                      height: 60px;
-                      margin-right: 15px;
-                      object-fit: cover;
-                  }
-                  .item-details {
-                      flex-grow: 1;
-                  }
-                  .total {
-                      margin-top: 20px;
-                      text-align: right;
-                      font-weight: bold;
-                  }
-                  .footer {
-                      margin-top: 20px;
-                      text-align: center;
-                      color: #6c757d;
-                  }
-              </style>
-          </head>
-          <body>
-              <div class="email-container">
-                  <div class="header">
-                      <h2>Order Confirmation</h2>
-                      <p>Thank you for your order!</p>
-                  </div>
-                  
-                  <div class="order-info">
-                      <p><strong>Order Status:</strong> ${orderStatus}</p>
-                      <p><strong>Order Date:</strong> ${new Date(
-                        orderDate
-                      ).toLocaleString()}</p>
-                      
-                      <h3>Order Items:</h3>
-                      ${cartItems
-                        .map(
-                          (item: any) => `
-                          <div class="item">
-                              <img src="${item.image}" alt="${item.title}">
-                              <div class="item-details">
-                                  <h4>${item.title}</h4>
-                                  <p>Price: ₹${item.price}</p>
-                                  <p>Quantity: ${item.quantity}</p>
-                              </div>
-                          </div>
-                      `
-                        )
-                        .join("")}
-                      
-                      <div class="total">
-                          <p>Total Amount: ₹${totalAmount}</p>
-                      </div>
-                  </div>
-                  
-                  <div class="footer">
-                      <p>If you have any questions, please contact our support team.</p>
-                  </div>
-              </div>
-          </body>
-          </html>
-      `;
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Order Confirmation</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 0;
+          background-color: #f4f4f4;
+          color: #333;
+        }
+        .container {
+          max-width: 600px;
+          margin: 20px auto;
+          background: #ffffff;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          padding: 20px;
+        }
+        .header {
+          text-align: center;
+          padding: 10px 0;
+          border-bottom: 2px solid #f0f0f0;
+        }
+        .header h1 {
+          margin: 0;
+          color: #444;
+        }
+        .order-details {
+          margin: 20px 0;
+        }
+        .order-details img {
+          width: 100px;
+          height: auto;
+          border-radius: 4px;
+        }
+        .item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 10px;
+        }
+        .item-info {
+          flex: 1;
+          margin-left: 10px;
+        }
+        .item-info h4 {
+          margin: 0;
+          font-size: 16px;
+        }
+        .item-info p {
+          margin: 5px 0 0;
+          font-size: 14px;
+          color: #777;
+        }
+        .total {
+          text-align: right;
+          font-size: 18px;
+          font-weight: bold;
+          margin-top: 20px;
+        }
+        .footer {
+          text-align: center;
+          margin-top: 20px;
+          font-size: 12px;
+          color: #999;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Order Confirmation</h1>
+        </div>
+    
+        <p>Thank you for your order! Here are the details:</p>
+    
+        <div class="order-details">
+          ${cartItems
+            .map(
+              (item: any) => `
+          <div class="item">
+            <img src="${item.image}" alt="${item.title}">
+            <div class="item-info">
+              <h4>${item.title}</h4>
+              <p>Price: ₹${item.salePrice}</p>
+              <p>Quantity: ${item.quantity}</p>
+            </div>
+          </div>
+          `
+            )
+            .join("")}
+        </div>
+    
+        <div class="total">
+          Total Amount: ₹${totalAmount}
+        </div>
+    
+        <p><strong>Order Status:</strong> ${orderStatus}</p>
+        <p><strong>Order Date:</strong> ${new Date(
+          orderDate
+        ).toLocaleString()}</p>
+    
+        <div class="footer">
+          <p>For any questions about your order, please contact our support team.</p>
+          <p>&copy; 2025 Your Company Name</p>
+        </div>
+      </div>
+    </body>
+    </html>`;
     const mailOptions = {
       from: process.env.NODEMAILER_ACCOUNT_EMAIL,
       to: user.email,
