@@ -191,7 +191,7 @@ export const updateCartItemQuantityController = async (
     if (quantity === "plus") {
       if (
         product?.totalStock &&
-        product?.totalStock <= cart.items[findCurrentProductIndex].quantity + 1
+        product?.totalStock <= cart.items[findCurrentProductIndex].quantity
       ) {
         res.status(400).json({ message: "Product out of stock" });
         return;
@@ -227,8 +227,9 @@ export const updateCartItemQuantityController = async (
       }
     } else {
       if (product?.quantityDiscounts?.length === 0) {
-        cart.items[findCurrentProductIndex].quantity += 1;
+        cart.items[findCurrentProductIndex].quantity -= 1;
         cart.items[findCurrentProductIndex].price = product.salePrice;
+        console.log(product);
         await cart.save();
         res.status(200).json(cart.items);
         return;
