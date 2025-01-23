@@ -5,7 +5,7 @@ import cartModel from "../models/cartModel";
 import { getCurrentUserId } from "../utils/currentUserId";
 import userModel from "../models/userModel";
 import productModel from "../models/productModel";
-
+import nodemailer from "nodemailer";
 export const createOrder = async (req: Request, res: Response) => {
   try {
     const {
@@ -203,6 +203,135 @@ export const addOrderController = async (req: Request, res: Response) => {
     if (cart) {
       await cartModel.findByIdAndDelete(cartId);
     }
+    const transporter = nodemailer.createTransport({
+      service: "gmail", // Use your email provider (e.g., 'gmail', 'yahoo', 'hotmail', etc.)
+      auth: {
+        user: "adityagupta1291@gmail.com", // Your email address
+        pass: process.env.NODEMAILER_ACCOUNT_PASS, // Your email password or app password
+      },
+    });
+    const htmlTemplate = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Order Confirmation</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 0;
+          background-color: #f4f4f4;
+          color: #333;
+        }
+        .container {
+          max-width: 600px;
+          margin: 20px auto;
+          background: #ffffff;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          padding: 20px;
+        }
+        .header {
+          text-align: center;
+          padding: 10px 0;
+          border-bottom: 2px solid #f0f0f0;
+        }
+        .header h1 {
+          margin: 0;
+          color: #444;
+        }
+        .order-details {
+          margin: 20px 0;
+        }
+        .order-details img {
+          width: 100px;
+          height: auto;
+          border-radius: 4px;
+        }
+        .item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 10px;
+        }
+        .item-info {
+          flex: 1;
+          margin-left: 10px;
+        }
+        .item-info h4 {
+          margin: 0;
+          font-size: 16px;
+        }
+        .item-info p {
+          margin: 5px 0 0;
+          font-size: 14px;
+          color: #777;
+        }
+        .total {
+          text-align: right;
+          font-size: 18px;
+          font-weight: bold;
+          margin-top: 20px;
+        }
+        .footer {
+          text-align: center;
+          margin-top: 20px;
+          font-size: 12px;
+          color: #999;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+        <h1>
+          <a href="https://storex-frontend.vercel.app/">Ajit Agencies</a>
+        </h1>
+        <h1>Order Confirmation</h1>
+        </div>
+    
+        <p>Thank you for your order! Here are the details:</p>
+    
+        <div class="order-details">
+          ${cartItems
+            .map(
+              (item: any) => `
+          <div class="item">
+            <img src="${item.image}" alt="${item.title}">
+            <div class="item-info">
+              <h4>${item.title}</h4>
+              <p>Price: ₹${item.salePrice}</p>
+              <p>Quantity: ${item.quantity}</p>
+            </div>
+          </div>
+          `
+            )
+            .join("")}
+        </div>
+    
+        <div class="total">
+          Total Amount: ₹${totalAmount}
+        </div>
+    
+        <p><strong>Payment Status:</strong> ${paymentStatus}</p>
+        <p><strong>Order Status:</strong> ${orderStatus}</p>
+    
+        <div class="footer">
+          <p>To check progress of your order, please check our website.</p>
+          <p>&copy; 2025 Ajit Agencies</p>
+        </div>
+      </div>
+    </body>
+    </html>`;
+    const mailOptions = {
+      from: process.env.NODEMAILER_ACCOUNT_EMAIL,
+      to: `${user.email}, adityagupta1291@gmail.com`,
+      subject: "Order Placed Successfully",
+      html: htmlTemplate,
+    };
+    await transporter.sendMail(mailOptions);
     res.status(200).json({
       message: "Order added successfully",
       order: newOrder,

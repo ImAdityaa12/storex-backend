@@ -20,6 +20,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.7.1",
     "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.10.0",
     "paypal-rest-sdk": "^1.8.1"
   },
   "devDependencies": {
@@ -30,6 +31,7 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/multer": "^1.4.12",
     "@types/node": "^22.7.5",
+    "@types/nodemailer": "^6.4.17",
     "@types/paypal-rest-sdk": "^1.7.9",
     "concurrently": "^9.0.1",
     "express": "^4.21.1",

@@ -4,12 +4,18 @@ import { Request, Response } from "express";
 import { generateToken } from "../utils/generateToken";
 import jwt from "jsonwebtoken";
 import { calculateDiscount } from "../utils/calculateDiscount";
+import nodemailer from "nodemailer";
 export const registerController = async (req: Request, res: Response) => {
   try {
     const { name, userName, email, password, phoneNumber, image } = req.body;
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
       res.status(400).json({ message: "User already exists" });
+      return;
+    }
+    const availableUserName = await userModel.findOne({ userName });
+    if (availableUserName) {
+      res.status(400).json({ message: "User name already exists" });
       return;
     }
     const uniquePhoneNumber = await userModel.findOne({ phoneNumber });
@@ -28,6 +34,105 @@ export const registerController = async (req: Request, res: Response) => {
       image,
     });
     const token = generateToken(email, user);
+    const transporter = nodemailer.createTransport({
+      service: "gmail", // Use your email provider (e.g., 'gmail', 'yahoo', 'hotmail', etc.)
+      auth: {
+        user: "adityagupta1291@gmail.com", // Your email address
+        pass: process.env.NODEMAILER_ACCOUNT_PASS, // Your email password or app password
+      },
+    });
+
+    const htmlTemplate = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+                .container { background-color: #f4f4f4; border-radius: 8px; padding: 30px; text-align: center; }
+                .welcome-title { color: #333; }
+                .welcome-message { color: #666; line-height: 1.6; }
+                .user-details { background-color: #ffffff; padding: 15px; border-radius: 5px; margin: 20px 0; }
+                .cta-button {
+                    display: inline-block;
+                    background-color: #4CAF50;
+                    color: white;
+                    padding: 10px 20px;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    margin-top: 20px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1 class="welcome-title">Welcome, ${name}!</h1>
+                <p class="welcome-message">
+                    Your account has been successfully created. 
+                    We're excited to have you on board.
+                </p>
+                <div class="user-details">
+                    <p><strong>Name:</strong> ${name}</p>
+                    <p><strong>User Name:</strong> ${userName}</p>
+                    <p><strong>Email:</strong> ${email}</p>
+                    <p><strong>Phone:</strong> ${phoneNumber}</p>
+                </div>
+                <a href="https://yourwebsite.com/login" class="cta-button">Login Now</a>
+            </div>
+        </body>
+        </html>
+        `;
+
+    const mailOptions = {
+      from: process.env.NODEMAILER_ACCOUNT_EMAIL,
+      to: email,
+      subject: "Order Placed Successfully",
+      html: htmlTemplate,
+    };
+    await transporter.sendMail(mailOptions);
+    const adminHtmlTemplate = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+            .container { background-color: #f4f4f4; border-radius: 8px; padding: 30px; text-align: center; }
+            .welcome-title { color: #333; }
+            .welcome-message { color: #666; line-height: 1.6; }
+            .user-details { background-color: #ffffff; padding: 15px; border-radius: 5px; margin: 20px 0; }
+            .cta-button {
+                display: inline-block;
+                background-color: #4CAF50;
+                color: white;
+                padding: 10px 20px;
+                text-decoration: none;
+                border-radius: 5px;
+                margin-top: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1 class="welcome-title">Hello, Admin!</h1> 
+            <p class="welcome-message">
+                A new user has been registered.
+            </p>
+            <div class="user-details">
+                <p><strong>Name:</strong> ${name}</p>
+                <p><strong>User Name:</strong> ${userName}</p>
+                <p><strong>Email:</strong> ${email}</p>
+                <p><strong>Phone:</strong> ${phoneNumber}</p>  
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+    const adminMailOptions = {
+      from: process.env.NODEMAILER_ACCOUNT_EMAIL,
+      to: "adityagupta1291@gmail.com",
+      subject: "New user registered",
+      html: adminHtmlTemplate,
+    };
+    await transporter.sendMail(adminMailOptions);
     res.status(201).json({ message: "User created successfully", token });
   } catch (error) {
     console.error(error);
