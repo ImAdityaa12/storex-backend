@@ -286,7 +286,10 @@ export const addOrderController = async (req: Request, res: Response) => {
     <body>
       <div class="container">
         <div class="header">
-          <h1>Order Confirmation</h1>
+        <h1>
+          <a href="https://storex-frontend.vercel.app/">Ajit Agencies</a>
+        </h1>
+        <h1>Order Confirmation</h1>
         </div>
     
         <p>Thank you for your order! Here are the details:</p>
@@ -316,7 +319,7 @@ export const addOrderController = async (req: Request, res: Response) => {
         <p><strong>Order Status:</strong> ${orderStatus}</p>
     
         <div class="footer">
-          <p>For any questions about your order, please contact our support team.</p>
+          <p>To check progress of your order, please check our website.</p>
           <p>&copy; 2025 Ajit Agencies</p>
         </div>
       </div>
