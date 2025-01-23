@@ -13,6 +13,11 @@ export const registerController = async (req: Request, res: Response) => {
       res.status(400).json({ message: "User already exists" });
       return;
     }
+    const availableUserName = await userModel.findOne({ userName });
+    if (availableUserName) {
+      res.status(400).json({ message: "User name already exists" });
+      return;
+    }
     const uniquePhoneNumber = await userModel.findOne({ phoneNumber });
     if (uniquePhoneNumber) {
       res.status(400).json({ message: "Phone number already exists" });
