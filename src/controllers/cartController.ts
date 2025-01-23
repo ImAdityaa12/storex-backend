@@ -35,44 +35,6 @@ interface CartResponse {
   items: TransformedCartItem[];
   total: number;
 }
-const calculateDiscountedProductQuantityPrice = (
-  minQuantiyPrice: {
-    minQuantity: number;
-    discountedPrice: number;
-  }[],
-  currentQuantity: number,
-  perPiecePrice: number
-) => {
-  if (minQuantiyPrice.length === 0) {
-    return perPiecePrice * currentQuantity;
-  }
-  const sortedMinQuantiyPrice = minQuantiyPrice.sort(
-    (a, b) => b.minQuantity - a.minQuantity
-  );
-
-  // Find the first matching discount tier
-  const matchingDiscount = sortedMinQuantiyPrice.find(
-    (discountQuantiyAndPrice) =>
-      currentQuantity >= discountQuantiyAndPrice.minQuantity
-  );
-
-  if (matchingDiscount) {
-    const remainingPieces = currentQuantity % matchingDiscount.minQuantity;
-    // console.log("here");
-    const remainingPiecesPrice = remainingPieces * perPiecePrice;
-    // console.log(currentQuantity);
-    // console.log(remainingPieces);
-    const itemQuantitySets = Math.floor(
-      currentQuantity / matchingDiscount.minQuantity
-    );
-    // console.log(itemQuantitySets);
-    const itemQuantitySetsPrice =
-      itemQuantitySets * matchingDiscount.discountedPrice;
-    return remainingPiecesPrice + itemQuantitySetsPrice;
-  }
-  // console.log("here again");
-  return perPiecePrice * currentQuantity;
-};
 export const addToCartController = async (req: Request, res: Response) => {
   try {
     const { productId, quantity, minQuantityFlag } = req.body;
@@ -136,7 +98,10 @@ export const addToCartController = async (req: Request, res: Response) => {
         res.status(201).json(cart.items);
         return;
       } else {
-        res.json("Product Quantity already in cart");
+        cart.items[findCurrentProductIndex].quantity = quantity;
+        cart.items[findCurrentProductIndex].price = perPiecePrice;
+        await cart.save();
+        res.status(201).json(cart.items);
         return;
       }
     }
@@ -328,6 +293,10 @@ export const updateCartItemCustomQuantityController = async (
     } else {
       if (typeof quantity === "number") {
         const product = await productModel.findById(productId);
+        if (product?.totalStock && product?.totalStock < quantity) {
+          res.status(400).json({ message: "Product out of stock" });
+          return;
+        }
         let discountedPrice = product?.salePrice ?? 0;
         product?.quantityDiscounts
           .sort((a, b) => b.minQuantity - a.minQuantity)
