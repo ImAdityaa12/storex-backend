@@ -224,6 +224,13 @@ export const updateCartItemQuantityController = async (
       (item) => item.productId.toString() === productId
     );
     if (quantity === "plus") {
+      if (
+        product?.totalStock &&
+        product?.totalStock <= cart.items[findCurrentProductIndex].quantity + 1
+      ) {
+        res.status(400).json({ message: "Product out of stock" });
+        return;
+      }
       if (product?.quantityDiscounts?.length === 0) {
         cart.items[findCurrentProductIndex].quantity += 1;
         cart.items[findCurrentProductIndex].price = product.salePrice;
