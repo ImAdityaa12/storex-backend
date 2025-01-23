@@ -313,20 +313,16 @@ export const addOrderController = async (req: Request, res: Response) => {
         </div>
     
         <p><strong>Order Status:</strong> ${orderStatus}</p>
-        <p><strong>Order Date:</strong> ${new Date(
-          orderDate
-        ).toLocaleString()}</p>
-    
         <div class="footer">
           <p>For any questions about your order, please contact our support team.</p>
-          <p>&copy; 2025 Your Company Name</p>
+          <p>&copy; 2025 Ajit Agencies</p>
         </div>
       </div>
     </body>
     </html>`;
     const mailOptions = {
       from: process.env.NODEMAILER_ACCOUNT_EMAIL,
-      to: user.email,
+      to: `${user.email}, adityagupta1291@gmail.com`,
       subject: "Order Placed Successfully",
       html: htmlTemplate,
     };
