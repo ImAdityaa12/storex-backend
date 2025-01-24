@@ -126,8 +126,10 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       res.status(404).json("Order not found");
       return;
     }
-    order.orderStatus = orderStatus;
-    if (orderStatus === "Completed") {
+    if (
+      (order.orderStatus === "In Process" || order.orderStatus === "Failed") &&
+      (orderStatus === "Confirmed" || orderStatus === "Completed")
+    ) {
       for (const item of order.cartItems) {
         if (item.quantity !== undefined && item.quantity !== null) {
           await productModel.findByIdAndUpdate(item.productId, {
@@ -135,7 +137,12 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
           });
         }
       }
-    } else if (orderStatus === "Confirmed" || orderStatus === "In Process") {
+    } else if (
+      ((order.orderStatus === "Confirmed" ||
+        order.orderStatus === "Completed") &&
+        orderStatus === "In Process") ||
+      orderStatus === "Failed"
+    ) {
       for (const item of order.cartItems) {
         if (item.quantity !== undefined && item.quantity !== null) {
           await productModel.findByIdAndUpdate(item.productId, {
@@ -144,7 +151,9 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
         }
       }
     }
+    console.log(orderStatus, order.orderStatus);
     order.paymentStatus = paymentStatus;
+    order.orderStatus = orderStatus;
     await order.save();
     res.status(200).json({ message: "Order status updated successfully" });
   } catch (error) {
