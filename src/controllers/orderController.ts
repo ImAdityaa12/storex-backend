@@ -151,7 +151,6 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
         }
       }
     }
-    console.log(orderStatus, order.orderStatus);
     order.paymentStatus = paymentStatus;
     order.orderStatus = orderStatus;
     await order.save();
