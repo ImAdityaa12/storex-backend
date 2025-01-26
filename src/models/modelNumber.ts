@@ -8,6 +8,7 @@ const modelNumber = new mongoose.Schema(
     },
     image: {
       type: String,
+      default: "",
     },
     category: [
       {
