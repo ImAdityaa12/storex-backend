@@ -198,8 +198,8 @@ export const getUsersController = async (req: Request, res: Response) => {
 export const addModelController = async (req: Request, res: Response) => {
   try {
     const { model, image } = req.body;
-    if (!model || !image) {
-      res.status(400).json({ message: "Model and image are required" });
+    if (!model) {
+      res.status(400).json({ message: "Model are required" });
       return;
     }
     const token = req.headers.authorization as string;
