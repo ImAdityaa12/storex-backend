@@ -366,7 +366,7 @@ export const getUserOrder = async (req: Request, res: Response) => {
       address: order.address,
       paymentMethod: order.paymentMethod,
       paymentStatus: order.paymentStatus,
-    }));
+    })).reverse();
     res.status(200).json(orders);
   } catch (error) {
     console.error(error);
