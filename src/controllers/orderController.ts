@@ -214,7 +214,7 @@ export const addOrderController = async (req: Request, res: Response) => {
     const transporter = nodemailer.createTransport({
       service: "gmail", // Use your email provider (e.g., 'gmail', 'yahoo', 'hotmail', etc.)
       auth: {
-        user: "adityagupta1291@gmail.com", // Your email address
+        user: process.env.NODEMAILER_ACCOUNT_EMAIL, // Your email address
         pass: process.env.NODEMAILER_ACCOUNT_PASS, // Your email password or app password
       },
     });
@@ -335,7 +335,7 @@ export const addOrderController = async (req: Request, res: Response) => {
     </html>`;
     const mailOptions = {
       from: process.env.NODEMAILER_ACCOUNT_EMAIL,
-      to: `${user.email}, adityagupta1291@gmail.com`,
+      to: `${user.email}, ${process.env.NODEMAILER_ACCOUNT_EMAIL}`,
       subject: "Order Placed Successfully",
       html: htmlTemplate,
     };
