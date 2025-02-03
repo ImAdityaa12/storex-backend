@@ -412,9 +412,13 @@ export const getProductsStocksController = async (
     }
     const products = await productModel
       .find()
-      .select("title totalStock category image model")
+      .select("title totalStock category image model limitedStock")
       .sort({ totalStock: 1 });
-    res.json({ products });
+    const limitedStockProduct = products.filter((product) => {
+      if (product.totalStock && product.limitedStock !== -1) {
+       if (product.totalStock < product.limitedStock) return product
+      }});
+    res.json({ products: limitedStockProduct });
     return;
   } catch (error) {
     res.status(500).json({ message: "An error occurred" });
