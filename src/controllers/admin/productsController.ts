@@ -416,9 +416,10 @@ export const getProductsStocksController = async (
       .sort({ totalStock: 1 });
     const limitedStockProduct = products.filter((product) => {
       if (product.totalStock && product.limitedStock !== -1) {
-       if (product.totalStock < product.limitedStock || product.totalStock === 0) return product
+       if (product.totalStock < product.limitedStock) return product
       }});
-    res.json({ products: limitedStockProduct });
+    const emptyProducts = products.filter((product) => product.totalStock === 0);
+    res.json({ products: [...limitedStockProduct, ...emptyProducts] });
     return;
   } catch (error) {
     res.status(500).json({ message: "An error occurred" });
