@@ -416,7 +416,7 @@ export const getProductsStocksController = async (
       .sort({ totalStock: 1 });
     const limitedStockProduct = products.filter((product) => {
       if (product.totalStock && product.limitedStock !== -1) {
-       if (product.totalStock < product.limitedStock) return product
+       if (product.totalStock < product.limitedStock || product.totalStock === 0) return product
       }});
     res.json({ products: limitedStockProduct });
     return;
