@@ -185,7 +185,7 @@ export const getUsersController = async (req: Request, res: Response) => {
       res.status(401).json({ message: "Unauthorized" });
       return;
     }
-    const users = await userModel.find();
+    const users = await userModel.find().sort({ createdAt: "descending" });
     const allUsers = users.filter((user) => user.id !== userId);
     res.json({ users: allUsers });
   } catch (error) {
@@ -416,9 +416,12 @@ export const getProductsStocksController = async (
       .sort({ totalStock: 1 });
     const limitedStockProduct = products.filter((product) => {
       if (product.totalStock && product.limitedStock !== -1) {
-       if (product.totalStock < product.limitedStock) return product
-      }});
-    const emptyProducts = products.filter((product) => product.totalStock === 0);
+        if (product.totalStock < product.limitedStock) return product;
+      }
+    });
+    const emptyProducts = products.filter(
+      (product) => product.totalStock === 0
+    );
     res.json({ products: [...limitedStockProduct, ...emptyProducts] });
     return;
   } catch (error) {
