@@ -37,7 +37,7 @@ export const registerController = async (req: Request, res: Response) => {
     const transporter = nodemailer.createTransport({
       service: "gmail", // Use your email provider (e.g., 'gmail', 'yahoo', 'hotmail', etc.)
       auth: {
-        user: "adityagupta1291@gmail.com", // Your email address
+        user: process.env.NODEMAILER_ACCOUNT_EMAIL, // Your email address
         pass: process.env.NODEMAILER_ACCOUNT_PASS, // Your email password or app password
       },
     });
