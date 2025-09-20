@@ -15,25 +15,25 @@ export const getAllProductsController = async (req: Request, res: Response) => {
     const cleanCategory = category?.replace(/"/g, "");
     const cleanBrands = brands?.replace(/"/g, "");
     if (!cleanCategory && !cleanBrands) {
-      const allProduct = await productModel.find().sort({ price: 1 });
+      const allProduct = await productModel.find().sort({ createdAt: -1 });
       const userLikedProducts = allProduct.map((product) =>
         user?.savedProduct.includes(product._id)
           ? {
-              product,
-              isLiked: true,
-              discount:
-                product.price &&
-                product.salePrice &&
-                ((product.price - product.salePrice) * 100) / product.price,
-            }
+            product,
+            isLiked: true,
+            discount:
+              product.price &&
+              product.salePrice &&
+              ((product.price - product.salePrice) * 100) / product.price,
+          }
           : {
-              product,
-              isLiked: false,
-              discount:
-                product.price &&
-                product.salePrice &&
-                ((product.price - product.salePrice) * 100) / product.price,
-            }
+            product,
+            isLiked: false,
+            discount:
+              product.price &&
+              product.salePrice &&
+              ((product.price - product.salePrice) * 100) / product.price,
+          }
       );
       const pagewiseProducts = userLikedProducts.slice(
         (page - 1) * 10,
@@ -46,14 +46,14 @@ export const getAllProductsController = async (req: Request, res: Response) => {
         .find({
           category: { $regex: cleanCategory, $options: "i" },
         })
-        .sort({ price: 1 });
+        .sort({ createdAt: -1 });
       res.json({ filteredProduct });
     } else if (!cleanCategory && cleanBrands) {
       const filteredProduct = await productModel
         .find({
           brand: { $regex: cleanBrands, $options: "i" },
         })
-        .sort({ price: 1 });
+        .sort({ createdAt: -1 });
       res.json({ filteredProduct });
     }
   } catch (error) {
@@ -184,21 +184,21 @@ export const getCategoryDataController = async (
     }[] = filteredProduct.map((product) =>
       user?.savedProduct.includes(product._id)
         ? {
-            product,
-            isLiked: true,
-            discount: calculateDiscount(
-              product.price ?? 0,
-              product.salePrice ?? 0
-            ),
-          }
+          product,
+          isLiked: true,
+          discount: calculateDiscount(
+            product.price ?? 0,
+            product.salePrice ?? 0
+          ),
+        }
         : {
-            product,
-            isLiked: false,
-            discount: calculateDiscount(
-              product.price ?? 0,
-              product.salePrice ?? 0
-            ),
-          }
+          product,
+          isLiked: false,
+          discount: calculateDiscount(
+            product.price ?? 0,
+            product.salePrice ?? 0
+          ),
+        }
     );
     const pagewiseProducts = products.slice((page - 1) * 10, page * 10);
     res.status(200).json({ products: pagewiseProducts });
@@ -236,13 +236,13 @@ export const getSimilarProductsController = async (
     }[] = filteredProduct.map((product) =>
       user?.savedProduct.includes(product._id)
         ? {
-            product,
-            isLiked: true,
-          }
+          product,
+          isLiked: true,
+        }
         : {
-            product,
-            isLiked: false,
-          }
+          product,
+          isLiked: false,
+        }
     );
     products = products.filter(
       (product) => product.product._id.toString() !== productId
@@ -282,13 +282,13 @@ export const getLatestProductsController = async (
     }[] = filteredProduct.map((product) =>
       user?.savedProduct.includes(product._id)
         ? {
-            product,
-            isLiked: true,
-          }
+          product,
+          isLiked: true,
+        }
         : {
-            product,
-            isLiked: false,
-          }
+          product,
+          isLiked: false,
+        }
     );
     res.status(200).json({ products });
   } catch (error) {
