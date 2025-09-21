@@ -184,13 +184,68 @@ export const getUsersController = async (req: Request, res: Response) => {
       res.status(401).json({ message: "Unauthorized" });
       return;
     }
-    const users = await userModel.find().sort({ createdAt: "descending" });
-    const allUsers = users.filter((user) => user.id !== userId);
-    res.json({ users: allUsers });
+
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+    const search = req.query.search as string;
+    const sortBy = req.query.sortBy as string || "newest";
+
+    // Build search query
+    let searchQuery: any = { _id: { $ne: userId } }; // Exclude current admin user
+    if (search) {
+      searchQuery = {
+        ...searchQuery,
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { userName: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } }
+        ]
+      };
+    }
+
+    // Build sort query
+    let sortQuery: any = {};
+    switch (sortBy) {
+      case "newest":
+        sortQuery = { createdAt: -1 };
+        break;
+      case "oldest":
+        sortQuery = { createdAt: 1 };
+        break;
+      case "name":
+        sortQuery = { name: 1 };
+        break;
+      case "email":
+        sortQuery = { email: 1 };
+        break;
+      default:
+        sortQuery = { createdAt: -1 }; // Default to newest
+    }
+
+    const totalUsers = await userModel.countDocuments(searchQuery);
+    const users = await userModel
+      .find(searchQuery)
+      .sort(sortQuery)
+      .skip(skip)
+      .limit(limit);
+
+    const totalPages = Math.ceil(totalUsers / limit);
+
+    res.json({
+      users,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalUsers,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
+    });
   } catch (error) {
     res
       .status(500)
-      .json({ message: "An error occurred while fetching products" });
+      .json({ message: "An error occurred while fetching users" });
   }
 };
 
