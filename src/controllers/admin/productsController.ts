@@ -7,9 +7,8 @@ import { getCurrentUserId } from "../../utils/currentUserId";
 import modelNumber from "../../models/modelNumber";
 import categoryModel from "../../models/categoryModel";
 import brandModel from "../../models/brandModel";
-import { model, models } from "mongoose";
+import { models } from "mongoose";
 import console from "console";
-import { create } from "domain";
 
 export const getProductsController = async (req: Request, res: Response) => {
   try {
@@ -185,13 +184,68 @@ export const getUsersController = async (req: Request, res: Response) => {
       res.status(401).json({ message: "Unauthorized" });
       return;
     }
-    const users = await userModel.find().sort({ createdAt: "descending" });
-    const allUsers = users.filter((user) => user.id !== userId);
-    res.json({ users: allUsers });
+
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+    const search = req.query.search as string;
+    const sortBy = req.query.sortBy as string || "newest";
+
+    // Build search query
+    let searchQuery: any = { _id: { $ne: userId } }; // Exclude current admin user
+    if (search) {
+      searchQuery = {
+        ...searchQuery,
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { userName: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } }
+        ]
+      };
+    }
+
+    // Build sort query
+    let sortQuery: any = {};
+    switch (sortBy) {
+      case "newest":
+        sortQuery = { createdAt: -1 };
+        break;
+      case "oldest":
+        sortQuery = { createdAt: 1 };
+        break;
+      case "name":
+        sortQuery = { name: 1 };
+        break;
+      case "email":
+        sortQuery = { email: 1 };
+        break;
+      default:
+        sortQuery = { createdAt: -1 }; // Default to newest
+    }
+
+    const totalUsers = await userModel.countDocuments(searchQuery);
+    const users = await userModel
+      .find(searchQuery)
+      .sort(sortQuery)
+      .skip(skip)
+      .limit(limit);
+
+    const totalPages = Math.ceil(totalUsers / limit);
+
+    res.json({
+      users,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalUsers,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
+    });
   } catch (error) {
     res
       .status(500)
-      .json({ message: "An error occurred while fetching products" });
+      .json({ message: "An error occurred while fetching users" });
   }
 };
 
@@ -410,19 +464,54 @@ export const getProductsStocksController = async (
       res.status(401).json({ message: "Unauthorized" });
       return;
     }
+
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+    const search = req.query.search as string;
+
+    // Build search query
+    let searchQuery = {};
+    if (search) {
+      searchQuery = {
+        $or: [
+          { title: { $regex: search, $options: "i" } },
+          { category: { $regex: search, $options: "i" } },
+          { model: { $regex: search, $options: "i" } }
+        ]
+      };
+    }
+
     const products = await productModel
-      .find()
+      .find(searchQuery)
       .select("title totalStock category image model limitedStock")
       .sort({ totalStock: 1 });
+
     const limitedStockProduct = products.filter((product) => {
       if (product.totalStock && product.limitedStock !== -1) {
         if (product.totalStock < product.limitedStock) return product;
       }
     });
+
     const emptyProducts = products.filter(
       (product) => product.totalStock === 0
     );
-    res.json({ products: [...limitedStockProduct, ...emptyProducts] });
+
+    const allFilteredProducts = [...limitedStockProduct, ...emptyProducts];
+    const totalProducts = allFilteredProducts.length;
+    const paginatedProducts = allFilteredProducts.slice(skip, skip + limit);
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    res.json({
+      products: paginatedProducts,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalProducts,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
+    });
     return;
   } catch (error) {
     res.status(500).json({ message: "An error occurred" });
