@@ -16,7 +16,15 @@ export const getAllProductsController = async (req: Request, res: Response) => {
     const cleanBrands = brands?.replace(/"/g, "");
     if (!cleanCategory && !cleanBrands) {
       const allProduct = await productModel.find().sort({ createdAt: -1 });
-      const userLikedProducts = allProduct.map((product) =>
+
+      // Separate in-stock and out-of-stock products
+      const inStockProducts = allProduct.filter(product => product.totalStock != null && product.totalStock > 0);
+      const outOfStockProducts = allProduct.filter(product => product.totalStock == null || product.totalStock === 0);
+
+      // Combine arrays with out-of-stock products at the end
+      const sortedProducts = [...inStockProducts, ...outOfStockProducts];
+
+      const userLikedProducts = sortedProducts.map((product) =>
         user?.savedProduct.includes(product._id)
           ? {
             product,
@@ -42,18 +50,34 @@ export const getAllProductsController = async (req: Request, res: Response) => {
       res.json({ products: pagewiseProducts });
       return;
     } else if (cleanCategory && !cleanBrands) {
-      const filteredProduct = await productModel
+      const allFilteredProducts = await productModel
         .find({
           category: { $regex: cleanCategory, $options: "i" },
         })
         .sort({ createdAt: -1 });
+
+      // Separate in-stock and out-of-stock products
+      const inStockProducts = allFilteredProducts.filter(product => product.totalStock != null && product.totalStock > 0);
+      const outOfStockProducts = allFilteredProducts.filter(product => product.totalStock == null || product.totalStock === 0);
+
+      // Combine arrays with out-of-stock products at the end
+      const filteredProduct = [...inStockProducts, ...outOfStockProducts];
+
       res.json({ filteredProduct });
     } else if (!cleanCategory && cleanBrands) {
-      const filteredProduct = await productModel
+      const allFilteredProducts = await productModel
         .find({
           brand: { $regex: cleanBrands, $options: "i" },
         })
         .sort({ createdAt: -1 });
+
+      // Separate in-stock and out-of-stock products
+      const inStockProducts = allFilteredProducts.filter(product => product.totalStock != null && product.totalStock > 0);
+      const outOfStockProducts = allFilteredProducts.filter(product => product.totalStock == null || product.totalStock === 0);
+
+      // Combine arrays with out-of-stock products at the end
+      const filteredProduct = [...inStockProducts, ...outOfStockProducts];
+
       res.json({ filteredProduct });
     }
   } catch (error) {
