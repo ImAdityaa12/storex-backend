@@ -7,9 +7,8 @@ import { getCurrentUserId } from "../../utils/currentUserId";
 import modelNumber from "../../models/modelNumber";
 import categoryModel from "../../models/categoryModel";
 import brandModel from "../../models/brandModel";
-import { model, models } from "mongoose";
+import { models } from "mongoose";
 import console from "console";
-import { create } from "domain";
 
 export const getProductsController = async (req: Request, res: Response) => {
   try {
@@ -410,19 +409,54 @@ export const getProductsStocksController = async (
       res.status(401).json({ message: "Unauthorized" });
       return;
     }
+
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+    const search = req.query.search as string;
+
+    // Build search query
+    let searchQuery = {};
+    if (search) {
+      searchQuery = {
+        $or: [
+          { title: { $regex: search, $options: "i" } },
+          { category: { $regex: search, $options: "i" } },
+          { model: { $regex: search, $options: "i" } }
+        ]
+      };
+    }
+
     const products = await productModel
-      .find()
+      .find(searchQuery)
       .select("title totalStock category image model limitedStock")
       .sort({ totalStock: 1 });
+
     const limitedStockProduct = products.filter((product) => {
       if (product.totalStock && product.limitedStock !== -1) {
         if (product.totalStock < product.limitedStock) return product;
       }
     });
+
     const emptyProducts = products.filter(
       (product) => product.totalStock === 0
     );
-    res.json({ products: [...limitedStockProduct, ...emptyProducts] });
+
+    const allFilteredProducts = [...limitedStockProduct, ...emptyProducts];
+    const totalProducts = allFilteredProducts.length;
+    const paginatedProducts = allFilteredProducts.slice(skip, skip + limit);
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    res.json({
+      products: paginatedProducts,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalProducts,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
+    });
     return;
   } catch (error) {
     res.status(500).json({ message: "An error occurred" });
